@@ -1,0 +1,6 @@
+@VidizmoBackend_HostAddress = http://localhost:5289
+
+GET {{VidizmoBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
