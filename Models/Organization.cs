@@ -6,9 +6,10 @@ namespace VidizmoBackend.Models
         public string Name { get; set; } // Name of the organization
         public string Description { get; set; } // Description of the organization
         public DateTime CreatedAt { get; set; } // Timestamp when the organization was created
-        public int CreaetdByUserId { get; set; } // Foreign key to the User who created this organization
-        
-        // Navigation properties
-        public ICollection<Portal> Portals { get; set; } // Collection of portals associated with this organization
+
+        public int CreatedByUserId { get; set; } // FK to User
+        public User CreatedByUser { get; set; } // Navigation to User
+
+        public ICollection<Portal> Portals { get; set; } // Navigation to Portals
     }
 }

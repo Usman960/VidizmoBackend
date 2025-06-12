@@ -10,8 +10,10 @@ namespace VidizmoBackend.Models
         public string FilePath { get; set; } // Path to the video file in the storage system
         public string FileFormat { get; set; } // Format of the video file (e.g., mp4, avi, etc.)
         public DateTime UploadedAt  { get; set; } // Timestamp when the video was uploaded
-        public int UploadedByUserId { get; set; } // Foreign key to the User who uploaded this video
-        // Navigation properties
-        public ICollection<VideoTag> VideoTags {get; set;}  
+
+        public int UploadedByUserId { get; set; } // FK to User
+        public User UploadedByUser { get; set; } // Navigation to User
+
+        public ICollection<VideoTag> VideoTags { get; set; } // Navigation to VideoTags
     }
 }
