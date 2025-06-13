@@ -4,9 +4,9 @@ namespace VidizmoBackend.Models {
         public string Firstname { get; set; }
         public string? Lastname { get; set; }
         public string Email { get; set; }
-        public byte[] PasswordHash { get; set; }
-        public byte[] PasswordSalt { get; set; }
+        public string PasswordHash { get; set; }
         public DateTime CreatedAt { get; set; }
+        public Organization? Organization { get; set; }
 
         public ICollection<Group> GroupsCreated { get; set; }
 
@@ -18,7 +18,6 @@ namespace VidizmoBackend.Models {
 
         public ICollection<Video> Videos { get; set; }
         public ICollection<UserPortalRole> UserPortalRoles { get; set; }
-        public ICollection<Organization> Organizations { get; set; }
         public ICollection<ScopedToken> TokensCreated { get; set; }
         public ICollection<ScopedToken> ScopedTokensReceived { get; set; }
 

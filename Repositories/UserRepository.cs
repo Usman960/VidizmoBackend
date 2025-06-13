@@ -17,5 +17,11 @@ namespace VidizmoBackend.Repositories
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
+        
+        public async Task<bool> CreateUserAsync(User user)
+        {
+            _context.Users.Add(user);
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }

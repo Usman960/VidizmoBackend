@@ -27,11 +27,14 @@ namespace VidizmoBackend.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // User - Organization (CreatedBy)
+            modelBuilder.Entity<Organization>()
+                .HasIndex(o => o.Name)
+                .IsUnique();
+
             modelBuilder.Entity<Organization>()
                 .HasOne(o => o.CreatedByUser)
-                .WithMany(u => u.Organizations)
-                .HasForeignKey(o => o.CreatedByUserId)
+                .WithOne(u => u.Organization)
+                .HasForeignKey<Organization>(o => o.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // User - Video (UploadedBy)

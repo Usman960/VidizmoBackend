@@ -2,6 +2,8 @@ using VidizmoBackend.DTOs;
 using VidizmoBackend.Helpers;
 using VidizmoBackend.Models;
 using VidizmoBackend.Repositories;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 namespace VidizmoBackend.Services
 {
@@ -9,35 +11,55 @@ namespace VidizmoBackend.Services
     {
         private readonly IUserRepository _userRepo;
         private readonly JwtTokenGenerator _tokenGenerator;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AuthService(IUserRepository userRepo, JwtTokenGenerator tokenGenerator)
+        public AuthService(IUserRepository userRepo, JwtTokenGenerator tokenGenerator, IPasswordHasher<User> passwordHasher)
         {
             _userRepo = userRepo;
             _tokenGenerator = tokenGenerator;
+            _passwordHasher = passwordHasher;
         }
 
-        public async Task<LoginResponseDto?> AuthenticateAsync(LoginRequestDto dto)
+        public async Task<string?> AuthenticateAsync(LoginRequestDto dto)
         {
             var user = await _userRepo.GetUserByEmailAsync(dto.Email);
             if (user == null) return null;
-
-            if (!VerifyPassword(dto.Password, user.PasswordHash, user.PasswordSalt))
+            
+            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
+            
+            if (result != PasswordVerificationResult.Success)
                 return null;
 
-            var (token, exp) = _tokenGenerator.GenerateToken(user);
+            var (token, _) = _tokenGenerator.GenerateToken(user);
 
-            return new LoginResponseDto
-            {
-                Token = token,
-                ExpiresAt = exp
-            };
+            return token;
         }
 
-        private bool VerifyPassword(string password, byte[] storedHash, byte[] storedSalt)
+        public async Task<bool> SignUpAsync(SignUpRequestDto dto)
         {
-            using var hmac = new System.Security.Cryptography.HMACSHA512(storedSalt);
-            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return storedHash.SequenceEqual(computedHash);
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password) || 
+            string.IsNullOrWhiteSpace(dto.Firstname) || string.IsNullOrWhiteSpace(dto.Lastname))
+            {
+                throw new ArgumentException("Invalid sign up data.");
+            }
+
+            var existingUser = await _userRepo.GetUserByEmailAsync(dto.Email);
+            if (existingUser != null)
+            {
+                throw new InvalidOperationException("User with this email already exists.");
+            }
+
+            var user = new User
+            {
+                Firstname = dto.Firstname,
+                Lastname = dto.Lastname,
+                Email = dto.Email,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+
+            return await _userRepo.CreateUserAsync(user);
         }
     }
 }
