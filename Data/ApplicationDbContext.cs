@@ -11,7 +11,6 @@ namespace VidizmoBackend.Data
         // DbSets
         public DbSet<User> Users { get; set; }
         public DbSet<Organization> Organizations { get; set; }
-        public DbSet<Portal> Portals { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<Video> Videos { get; set; }
@@ -20,7 +19,7 @@ namespace VidizmoBackend.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
-        public DbSet<UserPortalRole> UserPortalRoles { get; set; }
+        public DbSet<UserOrgRole> UserOrgRoles { get; set; }
         public DbSet<ScopedToken> ScopedTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -42,20 +41,12 @@ namespace VidizmoBackend.Data
                 .HasOne(v => v.UploadedByUser)
                 .WithMany(u => u.Videos)
                 .HasForeignKey(v => v.UploadedByUserId);
-                
 
-            // Organization - Portal
-            modelBuilder.Entity<Portal>()
-                .HasOne(p => p.Organization)
-                .WithMany(o => o.Portals)
-                .HasForeignKey(p => p.OrganizationId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Portal - Group
+            // Organization - Group
             modelBuilder.Entity<Group>()
-                .HasOne(g => g.Portal)
-                .WithMany(p => p.Groups)
-                .HasForeignKey(g => g.PortalId)
+                .HasOne(g => g.Organization)
+                .WithMany(o => o.Groups)
+                .HasForeignKey(g => g.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict);
             
             modelBuilder.Entity<Group>()
@@ -118,41 +109,47 @@ namespace VidizmoBackend.Data
                 .HasForeignKey(rp => rp.PermissionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // User - Portal - Role (UserPortalRole)
-            modelBuilder.Entity<UserPortalRole>()
-                .HasKey(upr => upr.UserPortalRoleId);
+            // User - Org - Role (UserOrgRole)
+            modelBuilder.Entity<UserOrgRole>()
+                .HasKey(uor => uor.UserOrgRoleId);
 
-            modelBuilder.Entity<UserPortalRole>()
-                .HasOne(upr => upr.User)
-                .WithMany(u => u.UserPortalRoles)
-                .HasForeignKey(upr => upr.UserId)
+            modelBuilder.Entity<UserOrgRole>()
+                .HasOne(uor => uor.User)
+                .WithMany(u => u.UserOrgRoles)
+                .HasForeignKey(uor => uor.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserOrgRole>()
+                .HasOne(uor => uor.Organization)
+                .WithMany(o => o.UserOrgRoles)
+                .HasForeignKey(uor => uor.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            // UserPortalRole - AssignedByUser
-            modelBuilder.Entity<UserPortalRole>()
+            modelBuilder.Entity<UserOrgRole>()
+                .HasOne(uor => uor.Role)
+                .WithMany(r => r.UserOrgRoles)
+                .HasForeignKey(uor => uor.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            // UserOrgRole - AssignedByUser
+            modelBuilder.Entity<UserOrgRole>()
+                .HasOne(upr => upr.AssignedByUser)
+                .WithMany() // no back-navigation from User
+                .HasForeignKey(upr => upr.AssignedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            // UserOrgRole - AssignedByUser
+            modelBuilder.Entity<UserOrgRole>()
                 .HasOne(upr => upr.AssignedByUser)
                 .WithMany() // no back-navigation from User
                 .HasForeignKey(upr => upr.AssignedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // UserPortalRole - RevokedByUser
-            modelBuilder.Entity<UserPortalRole>()
+            // UserOrgRole - RevokedByUser
+            modelBuilder.Entity<UserOrgRole>()
                 .HasOne(upr => upr.RevokedByUser)
                 .WithMany() // no back-navigation from User
                 .HasForeignKey(upr => upr.RevokedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-
-            modelBuilder.Entity<UserPortalRole>()
-                .HasOne(upr => upr.Portal)
-                .WithMany(p => p.UserPortalRoles)
-                .HasForeignKey(upr => upr.PortalId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<UserPortalRole>()
-                .HasOne(upr => upr.Role)
-                .WithMany(r => r.UserPortalRoles)
-                .HasForeignKey(upr => upr.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Token is created by a user (required)
@@ -171,10 +168,16 @@ namespace VidizmoBackend.Data
 
             // Token is always tied to a portal
             modelBuilder.Entity<ScopedToken>()
-                .HasOne(st => st.Portal)
+                .HasOne(st => st.Organization)
                 .WithMany(p => p.ScopedTokens) 
-                .HasForeignKey(st => st.PortalId)
+                .HasForeignKey(st => st.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Role>()
+                .HasOne(r => r.CreatedByUser)
+                .WithMany(u => u.Roles)
+                .HasForeignKey(r => r.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

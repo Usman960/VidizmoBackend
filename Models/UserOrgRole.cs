@@ -1,10 +1,10 @@
 namespace VidizmoBackend.Models {
-    public class UserPortalRole {
-        public int UserPortalRoleId {get; set;}
+    public class UserOrgRole {
+        public int UserOrgRoleId {get; set;}
         public int UserId {get; set;}
         public User User {get; set;} // Navigation to the User this role belongs to
-        public int PortalId {get; set;}
-        public Portal Portal {get; set;} // Navigation to the Portal this role belongs to
+        public int OrganizationId {get; set;}
+        public Organization  Organization {get; set;} // Navigation to the Organization this role belongs to
         public int RoleId {get; set;}
         public Role Role {get; set;} // Navigation to the Role this user has in the portal
         public DateTime AssignedAt {get; set;}

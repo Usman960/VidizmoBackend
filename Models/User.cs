@@ -15,9 +15,9 @@ namespace VidizmoBackend.Models {
 
         // Separate navigation for users who performed the addition
         public ICollection<UserGroup> UserGroupsAddedByMe { get; set; }
-
+        public ICollection<Role> Roles { get; set; } // Roles created by this user
         public ICollection<Video> Videos { get; set; }
-        public ICollection<UserPortalRole> UserPortalRoles { get; set; }
+        public ICollection<UserOrgRole> UserOrgRoles { get; set; } // Roles in the organization
         public ICollection<ScopedToken> TokensCreated { get; set; }
         public ICollection<ScopedToken> ScopedTokensReceived { get; set; }
 

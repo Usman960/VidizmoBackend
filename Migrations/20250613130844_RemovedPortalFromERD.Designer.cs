@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VidizmoBackend.Data;
 
@@ -11,9 +12,11 @@ using VidizmoBackend.Data;
 namespace VidizmoBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250613130844_RemovedPortalFromERD")]
+    partial class RemovedPortalFromERD
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,8 +132,6 @@ namespace VidizmoBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RoleId");
-
-                    b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Roles");
                 });
@@ -435,17 +436,6 @@ namespace VidizmoBackend.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
-            modelBuilder.Entity("VidizmoBackend.Models.Role", b =>
-                {
-                    b.HasOne("VidizmoBackend.Models.User", "CreatedByUser")
-                        .WithMany("Roles")
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CreatedByUser");
-                });
-
             modelBuilder.Entity("VidizmoBackend.Models.RolePermission", b =>
                 {
                     b.HasOne("VidizmoBackend.Models.Permission", "Permission")
@@ -636,8 +626,6 @@ namespace VidizmoBackend.Migrations
                     b.Navigation("GroupsCreated");
 
                     b.Navigation("Organization");
-
-                    b.Navigation("Roles");
 
                     b.Navigation("ScopedTokensReceived");
 

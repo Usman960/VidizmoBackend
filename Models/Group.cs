@@ -5,8 +5,8 @@ namespace VidizmoBackend.Models
         public int GroupId { get; set; } // Unique identifier for the group
         public string Name { get; set; } // Name of the group
         public DateTime CreatedAt { get; set; } // Timestamp when the group was created
-        public int PortalId { get; set; } // Foreign key to the Portal this group belongs to
-        public Portal Portal { get; set; } // Navigation to the Portal this group belongs to
+        public int OrganizationId { get; set; } // Foreign key to the Organization this group belongs to
+        public Organization Organization { get; set; } // Navigation to the Organization this group belongs to
         public int CreatedByUserId { get; set; } // Foreign key to the User who created this group
         public User CreatedByUser { get; set; } // Navigation to the User who created this group
         // Navigation properties

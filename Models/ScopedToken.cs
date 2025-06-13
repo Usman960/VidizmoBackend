@@ -7,9 +7,9 @@ namespace VidizmoBackend.Models
         public int? UserId { get; set; }
         public User? User { get; set; }
 
-        // The portal context this token applies to (optional if global)
-        public int PortalId { get; set; }
-        public Portal Portal { get; set; }
+        // The organization context this token applies to (optional if global)
+        public int OrganizationId { get; set; }
+        public Organization Organization { get; set; }
 
         // Hashed token for validation/storage (NEVER store raw token)
         public string TokenHash { get; set; }
