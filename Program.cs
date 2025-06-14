@@ -17,9 +17,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register services and repositories
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<OrganizationService>();
+builder.Services.AddScoped<IOrgRepository, OrgRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<AzureBlobService>();
+builder.Services.AddScoped<VideoService>();
 builder.Services.AddSingleton<JwtTokenGenerator>(); // Assuming stateless JWT helper
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IVideoRepository, VideoRepository>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {

@@ -1,32 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Usman.M\\OneDrive - VIDIZMO.COM\\VidizmoBackend\\VidizmoBackend.csproj": {}
+    "F:\\VidizmoBackend\\VidizmoBackend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Usman.M\\OneDrive - VIDIZMO.COM\\VidizmoBackend\\VidizmoBackend.csproj": {
+    "F:\\VidizmoBackend\\VidizmoBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Usman.M\\OneDrive - VIDIZMO.COM\\VidizmoBackend\\VidizmoBackend.csproj",
+        "projectUniqueName": "F:\\VidizmoBackend\\VidizmoBackend.csproj",
         "projectName": "VidizmoBackend",
-        "projectPath": "C:\\Users\\Usman.M\\OneDrive - VIDIZMO.COM\\VidizmoBackend\\VidizmoBackend.csproj",
-        "packagesPath": "C:\\Users\\Usman.M\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Usman.M\\OneDrive - VIDIZMO.COM\\VidizmoBackend\\obj\\",
+        "projectPath": "F:\\VidizmoBackend\\VidizmoBackend.csproj",
+        "packagesPath": "C:\\Users\\I Com\\.nuget\\packages\\",
+        "outputPath": "F:\\VidizmoBackend\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Usman.M\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\I Com\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -51,6 +44,14 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Azure.Storage.Blobs": {
+              "target": "Package",
+              "version": "[12.24.1, )"
+            },
+            "DotNetEnv": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[9.0.6, )"
@@ -99,7 +100,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

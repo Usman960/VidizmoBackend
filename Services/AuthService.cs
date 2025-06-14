@@ -2,7 +2,6 @@ using VidizmoBackend.DTOs;
 using VidizmoBackend.Helpers;
 using VidizmoBackend.Models;
 using VidizmoBackend.Repositories;
-using System.Text;
 using Microsoft.AspNetCore.Identity;
 
 namespace VidizmoBackend.Services
