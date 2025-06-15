@@ -84,6 +84,20 @@ namespace VidizmoBackend.Services
             return true;
         }
 
+        public async Task<bool> DeleteAllVideosAsync(int userId)
+        {
+            var videos = await _videoRepository.GetAllVideosByUserIdAsync(userId);
+            if (videos == null) return true;
+
+            foreach (var video in videos)
+            {
+                var blobName = Path.GetFileName(new Uri(video.FilePath).LocalPath);
+                // Delete from blob
+                await _blobService.DeleteFileAsync(blobName);
+            }
+            return await _videoRepository.DeleteAllVideosByUserIdAsync(userId);
+        }
+
         public async Task<MetadataResDto> GetMetadataByIdAsync(int videoId)
         {
             var metadata = await _videoRepository.GetMetadataByIdAsync(videoId);

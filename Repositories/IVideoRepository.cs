@@ -15,5 +15,9 @@ namespace VidizmoBackend.Repositories
         Task<MetadataResDto> GetMetadataByIdAsync(int videoId);
         // edit video metadata
         Task<bool> EditVideoMetadataAsync(MetadataReqDto metadataReqDto, int videoId);
+        // delete all videos and tags associated with a user
+        Task<bool> DeleteAllVideosByUserIdAsync(int userId);
+        // get all videos uploaded by a user
+        Task<List<Video>> GetAllVideosByUserIdAsync(int userId);
     }
 }

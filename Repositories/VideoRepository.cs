@@ -25,6 +25,12 @@ namespace VidizmoBackend.Repositories
         }
         public async Task<bool> DeleteVideoAsync(Video video)
         {
+            // delete video tags associated with the video
+            var videoTags = await _context.VideoTags
+                .Where(vt => vt.VideoId == video.VideoId)
+                .ToListAsync();
+            _context.VideoTags.RemoveRange(videoTags);
+            // delete the video itself
             _context.Videos.Remove(video);
             return await _context.SaveChangesAsync() > 0;
         }
@@ -82,6 +88,35 @@ namespace VidizmoBackend.Repositories
                 }
             }
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeleteAllVideosByUserIdAsync(int userId)
+        {
+            // Find all videos uploaded by the user
+            var videos = await _context.Videos
+                .Where(v => v.UploadedByUserId == userId)
+                .ToListAsync();
+
+            if (videos.Count == 0) return true; // No videos to delete
+
+            // Remove all video tags associated with these videos
+            var videoIds = videos.Select(v => v.VideoId).ToList();
+            var videoTags = await _context.VideoTags
+                .Where(vt => videoIds.Contains(vt.VideoId))
+                .ToListAsync();
+            _context.VideoTags.RemoveRange(videoTags);
+
+            // Remove the videos themselves
+            _context.Videos.RemoveRange(videos);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<List<Video>> GetAllVideosByUserIdAsync(int userId)
+        {
+            return await _context.Videos
+                .Where(v => v.UploadedByUserId == userId)
+                .ToListAsync();
         }
     }
 }

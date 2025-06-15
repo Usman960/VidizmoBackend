@@ -104,5 +104,19 @@ namespace VidizmoBackend.Repositories
 
             return adminRole;
         }
+
+        public async Task<bool> DeleteAllRoleAssignmentsAsync(int userId)
+        {
+            // Find all role assignments for the user
+            var roleAssignments = await _context.UserOgGpRoles
+                .Where(uor => uor.UserId == userId)
+                .ToListAsync();
+
+            if (roleAssignments.Count == 0) return true;
+
+            // Remove all role assignments
+            _context.UserOgGpRoles.RemoveRange(roleAssignments);
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }

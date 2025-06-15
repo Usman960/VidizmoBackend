@@ -13,5 +13,7 @@ namespace VidizmoBackend.Repositories
         Task<Role> CreateRoleAsync(Role role, PermissionsDto permissionsDto);
         // create admin role for organization
         Task<Role> CreateAdminRoleAsync(int organizationId, int userId);
+        // delete role assignment
+        Task<bool> DeleteAllRoleAssignmentsAsync(int userId);
     }
 }
