@@ -6,5 +6,7 @@ namespace VidizmoBackend.Repositories
     {
         Task<User?> GetUserByEmailAsync(string email);
         Task<bool> CreateUserAsync(User user);
+        // add user to an organization
+        Task<bool> AddUserToOrganizationAsync(int userId, int organizationId);
     }
 }

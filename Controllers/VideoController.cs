@@ -98,5 +98,47 @@ namespace VidizmoBackend.Controllers
                 return StatusCode(500, "An unexpected error occurred: " + ex.Message);
             }
         }
+
+        [HttpGet("metadata/{videoId}")]
+        public async Task<IActionResult> GetVideoMetadata(int videoId)
+        {
+            try
+            {
+                var metadata = await _videoService.GetMetadataByIdAsync(videoId);
+
+                return Ok(metadata);
+            }
+            catch (FileNotFoundException)
+            {
+                return NotFound("Video metadata not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
+
+        [HttpPut("metadata/{videoId}")]
+        public async Task<IActionResult> EditVideoMetadata(int videoId, MetadataReqDto metadataReqDto)
+        {
+            try
+            {
+                var updated = await _videoService.EditVideoMetadataAsync(metadataReqDto, videoId);
+
+                return Ok("Video metadata updated successfully.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest("Failed to update video metadata: " + ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest("Invalid request: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
     }
 }

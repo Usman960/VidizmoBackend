@@ -83,5 +83,30 @@ namespace VidizmoBackend.Services
 
             return true;
         }
+
+        public async Task<MetadataResDto> GetMetadataByIdAsync(int videoId)
+        {
+            var metadata = await _videoRepository.GetMetadataByIdAsync(videoId);
+            if (metadata == null)
+            {
+                throw new FileNotFoundException("Video metadata not found.");
+            }
+            return metadata;
+        }
+
+        public async Task<bool> EditVideoMetadataAsync(MetadataReqDto metadataReqDto, int videoId)
+        {
+            if (metadataReqDto == null || videoId <= 0)
+            {
+                throw new ArgumentException("Invalid metadata or video ID.");
+            }
+
+            var updated = await _videoRepository.EditVideoMetadataAsync(metadataReqDto, videoId);
+            if (!updated)
+            {
+                throw new InvalidOperationException("Failed to update video metadata.");
+            }
+            return true;
+        }
     }
 }
