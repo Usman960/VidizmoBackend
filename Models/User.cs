@@ -6,6 +6,7 @@ namespace VidizmoBackend.Models {
         public string Email { get; set; }
         public string PasswordHash { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int? OrganizationId { get; set; } // Foreign key to the Organization this user belongs to
         public Organization? Organization { get; set; }
 
         public ICollection<Group> GroupsCreated { get; set; }
@@ -17,7 +18,7 @@ namespace VidizmoBackend.Models {
         public ICollection<UserGroup> UserGroupsAddedByMe { get; set; }
         public ICollection<Role> Roles { get; set; } // Roles created by this user
         public ICollection<Video> Videos { get; set; }
-        public ICollection<UserOrgRole> UserOrgRoles { get; set; } // Roles in the organization
+        public ICollection<UserOgGpRole> UserOgGpRoles { get; set; } // Roles in the organization
         public ICollection<ScopedToken> TokensCreated { get; set; }
         public ICollection<ScopedToken> ScopedTokensReceived { get; set; }
 

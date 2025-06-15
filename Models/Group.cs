@@ -11,5 +11,6 @@ namespace VidizmoBackend.Models
         public User CreatedByUser { get; set; } // Navigation to the User who created this group
         // Navigation properties
         public ICollection<UserGroup> UserGroups { get; set; } // Collection of user groups associated with this group
+        public ICollection<UserOgGpRole> UserOgGpRoles { get; set; } // Collection of user roles associated with this group
     }
 }

@@ -10,7 +10,7 @@ namespace VidizmoBackend.Models
         public User CreatedByUser { get; set; } // Navigation to the User who created this role      
 
         // Navigation properties
-        public ICollection<UserOrgRole> UserOrgRoles { get; set; } // Collection of user roles associated with this role
+        public ICollection<UserOgGpRole> UserOgGpRoles { get; set; } // Collection of user roles associated with this role
         public ICollection<RolePermission> RolePermissions { get; set; } // Collection of role permissions associated with this role
     }
 }

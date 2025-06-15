@@ -17,7 +17,7 @@ namespace VidizmoBackend.Repositories
         public async Task<Role?> RoleWithAllPermissionsExistsAsync(int organizationId)
         {
             // fetch all roles for the organization from UserOrdRole table
-            var roles = await _context.UserOrgRoles
+            var roles = await _context.UserOgGpRoles
                 .Include(uor => uor.Role)
                 .Where(uor => uor.OrganizationId == organizationId)
                 .Select(uor => uor.Role)
@@ -42,9 +42,9 @@ namespace VidizmoBackend.Repositories
             return null;
         }
 
-        public async Task<bool> AssignRoleToUserAsync(UserOrgRole userOrgRole)
+        public async Task<bool> AssignRoleToUserAsync(UserOgGpRole UserOgGpRole)
         {
-            _context.UserOrgRoles.Add(userOrgRole);
+            _context.UserOgGpRoles.Add(UserOgGpRole);
             return await _context.SaveChangesAsync() > 0;
         }
 

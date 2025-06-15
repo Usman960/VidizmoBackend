@@ -35,7 +35,7 @@ namespace VidizmoBackend.Repositories
 
         public async Task<Organization?> GetOrgByUserIdAsync(int userId)
         {
-            return await _context.UserOrgRoles
+            return await _context.UserOgGpRoles
                 .Include(uor => uor.Organization)
                 .Where(uor => uor.UserId == userId)
                 .Select(uor => uor.Organization)

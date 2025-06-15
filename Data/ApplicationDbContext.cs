@@ -19,7 +19,7 @@ namespace VidizmoBackend.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
-        public DbSet<UserOrgRole> UserOrgRoles { get; set; }
+        public DbSet<UserOgGpRole> UserOgGpRoles { get; set; }
         public DbSet<ScopedToken> ScopedTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -109,44 +109,44 @@ namespace VidizmoBackend.Data
                 .HasForeignKey(rp => rp.PermissionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // User - Org - Role (UserOrgRole)
-            modelBuilder.Entity<UserOrgRole>()
-                .HasKey(uor => uor.UserOrgRoleId);
+            // User - Org - Role (UserOgGpRole)
+            modelBuilder.Entity<UserOgGpRole>()
+                .HasKey(uor => uor.UserOgGpRoleId);
 
-            modelBuilder.Entity<UserOrgRole>()
+            modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(uor => uor.User)
-                .WithMany(u => u.UserOrgRoles)
+                .WithMany(u => u.UserOgGpRoles)
                 .HasForeignKey(uor => uor.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<UserOrgRole>()
+            modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(uor => uor.Organization)
-                .WithMany(o => o.UserOrgRoles)
+                .WithMany(o => o.UserOgGpRoles)
                 .HasForeignKey(uor => uor.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            modelBuilder.Entity<UserOrgRole>()
+            modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(uor => uor.Role)
-                .WithMany(r => r.UserOrgRoles)
+                .WithMany(r => r.UserOgGpRoles)
                 .HasForeignKey(uor => uor.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            // UserOrgRole - AssignedByUser
-            modelBuilder.Entity<UserOrgRole>()
+            // UserOgGpRole - AssignedByUser
+            modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(upr => upr.AssignedByUser)
                 .WithMany() // no back-navigation from User
                 .HasForeignKey(upr => upr.AssignedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            // UserOrgRole - AssignedByUser
-            modelBuilder.Entity<UserOrgRole>()
+            // UserOgGpRole - AssignedByUser
+            modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(upr => upr.AssignedByUser)
                 .WithMany() // no back-navigation from User
                 .HasForeignKey(upr => upr.AssignedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // UserOrgRole - RevokedByUser
-            modelBuilder.Entity<UserOrgRole>()
+            // UserOgGpRole - RevokedByUser
+            modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(upr => upr.RevokedByUser)
                 .WithMany() // no back-navigation from User
                 .HasForeignKey(upr => upr.RevokedByUserId)

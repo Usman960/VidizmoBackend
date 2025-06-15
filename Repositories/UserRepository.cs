@@ -24,15 +24,16 @@ namespace VidizmoBackend.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> AddUserToOrganizationAsync(int userId, int organizationId)
+        public async Task<bool> AssociateOrganizationWithUserAsync(int userId, int organizationId)
         {
-            var userOrgRole = new UserOrgRole
+            // set organizationId for the user
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
             {
-                UserId = userId,
-                OrganizationId = organizationId
-            };
-
-            _context.UserOrgRoles.Add(userOrgRole);
+                return false; // User not found
+            }
+            user.OrganizationId = organizationId;
+            _context.Users.Update(user);
             return await _context.SaveChangesAsync() > 0;
         }
     }

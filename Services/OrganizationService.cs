@@ -8,11 +8,12 @@ namespace VidizmoBackend.Services
     {
         private readonly IOrgRepository _organizationRepo;
         private readonly IRoleRepository _roleRepo;
-
-        public OrganizationService(IOrgRepository organizationRepo, IRoleRepository roleRepo)
+        private readonly IUserRepository _userRepo;
+        public OrganizationService(IOrgRepository organizationRepo, IRoleRepository roleRepo, IUserRepository userRepo)
         {
             _organizationRepo = organizationRepo;
             _roleRepo = roleRepo;
+            _userRepo = userRepo;
         }
 
         public async Task<bool> CreateOrganizationAsync(int userId, CreateOrgReqDto dto)
@@ -48,10 +49,16 @@ namespace VidizmoBackend.Services
                 throw new InvalidOperationException("Failed to create organization.");
             }
 
+            // associate the user with the organization
+            if (!await _userRepo.AssociateOrganizationWithUserAsync(userId, org.OrganizationId))
+            {
+                throw new InvalidOperationException("Failed to associate user with organization.");
+            }
+
             var role = await _roleRepo.CreateAdminRoleAsync(org.OrganizationId, userId);
 
             // Assign the admin role to the user
-            var userOrgRole = new UserOrgRole
+            var UserOgGpRole = new UserOgGpRole
             {
                 UserId = userId,
                 OrganizationId = org.OrganizationId,
@@ -61,7 +68,7 @@ namespace VidizmoBackend.Services
                 Status = "Active"
             };
 
-            if (!await _roleRepo.AssignRoleToUserAsync(userOrgRole))
+            if (!await _roleRepo.AssignRoleToUserAsync(UserOgGpRole))
             {
                 throw new InvalidOperationException("Failed to assign role to user.");
             }

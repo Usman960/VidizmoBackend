@@ -10,7 +10,7 @@ namespace VidizmoBackend.Models
         public int CreatedByUserId { get; set; } // FK to User
         public User CreatedByUser { get; set; } // Navigation to User
 
-        public ICollection<UserOrgRole> UserOrgRoles { get; set; } // Collection of user roles in this org
+        public ICollection<UserOgGpRole> UserOgGpRoles { get; set; } // Collection of user roles in this org
         public ICollection<Video> Videos { get; set; } // Collection of videos associated with this org
         public ICollection<Group> Groups { get; set; } // Collection of groups associated with this org
         public ICollection<ScopedToken> ScopedTokens { get; set; }
