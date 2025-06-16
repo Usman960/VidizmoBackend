@@ -24,6 +24,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AzureBlobService>();
 builder.Services.AddScoped<VideoService>();
+builder.Services.AddScoped<RoleService>();
 builder.Services.AddSingleton<JwtTokenGenerator>(); // Assuming stateless JWT helper
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IVideoRepository, VideoRepository>();

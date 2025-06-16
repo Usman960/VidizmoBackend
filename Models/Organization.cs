@@ -14,6 +14,6 @@ namespace VidizmoBackend.Models
         public ICollection<Video> Videos { get; set; } // Collection of videos associated with this org
         public ICollection<Group> Groups { get; set; } // Collection of groups associated with this org
         public ICollection<ScopedToken> ScopedTokens { get; set; }
-
+        public ICollection<User> Users { get; set; } // Collection of users associated with this org
     }
 }

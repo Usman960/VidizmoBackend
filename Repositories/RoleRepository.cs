@@ -48,7 +48,7 @@ namespace VidizmoBackend.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<Role> CreateRoleAsync(Role role, PermissionsDto permissionsDto)
+        public async Task<bool> CreateRoleAsync(Role role, PermissionsDto permissionsDto)
         {
             // Add role first to get its ID
             _context.Roles.Add(role);
@@ -74,7 +74,7 @@ namespace VidizmoBackend.Repositories
                 _context.RolePermissions.Add(rolePermission);
             }
 
-            return role;
+            return await _context.SaveChangesAsync() > 0;
         }
 
         public async Task<Role> CreateAdminRoleAsync(int organizationId, int userId)
@@ -117,6 +117,40 @@ namespace VidizmoBackend.Repositories
             // Remove all role assignments
             _context.UserOgGpRoles.RemoveRange(roleAssignments);
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> UserHasPermissionAsync(int userId, PermissionDto permissionDto) 
+        {
+            // fetch roles from UserOgGpRole table for the user where status is Active
+            var userRoles = await _context.UserOgGpRoles
+                .Where(uor => uor.UserId == userId && uor.Status == "Active")
+                .Select(uor => uor.Role)
+                .ToListAsync();
+            
+            if (userRoles == null || userRoles.Count == 0) return false;
+
+            // check if any role has the permission in RolePermissions table
+            foreach (var role in userRoles)
+            {
+                var hasPermission = await _context.RolePermissions
+                    .AnyAsync(rp => rp.RoleId == role.RoleId &&
+                                    rp.Permission.Action.ToLower() == permissionDto.Action.ToLower() &&
+                                    rp.Permission.Entity.ToLower() == permissionDto.Entity.ToLower());
+
+                if (hasPermission)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public async Task<Role?> RoleExistsInOrganizationAsync(int organizationId, int roleId)
+        {
+            // return the role where the organizationId of the user who created the role matches with the organizationId given in arg
+            return await _context.Roles
+                .Where(r => r.RoleId == roleId && r.CreatedByUser.OrganizationId == organizationId)
+                .FirstOrDefaultAsync();
         }
     }
 }

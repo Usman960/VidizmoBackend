@@ -7,7 +7,6 @@ namespace VidizmoBackend.Repositories
         Task<bool> CreateOrgAsync(Organization org);
         // get organization by organization name
         Task<Organization?> GetOrgByNameAsync(string orgName);
-        // get organization by user id
-        Task<Organization?> GetOrgByUserIdAsync(int userId);
+        Task<Organization?> GetOrgByIdAsync(int orgId);
     }
 }

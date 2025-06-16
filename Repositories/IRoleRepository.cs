@@ -10,10 +10,14 @@ namespace VidizmoBackend.Repositories
         // assign role to user
         Task<bool> AssignRoleToUserAsync(UserOgGpRole UserOgGpRole);
         // create role takes role and list of permissions as arguments
-        Task<Role> CreateRoleAsync(Role role, PermissionsDto permissionsDto);
+        Task<bool> CreateRoleAsync(Role role, PermissionsDto permissionsDto);
         // create admin role for organization
         Task<Role> CreateAdminRoleAsync(int organizationId, int userId);
         // delete role assignment
         Task<bool> DeleteAllRoleAssignmentsAsync(int userId);
+        // check if user has pemissions
+        Task<bool> UserHasPermissionAsync(int userId, PermissionDto permissionDto);
+        // check if roles exists in organization
+        Task<Role?> RoleExistsInOrganizationAsync(int organizationId, int roleId); 
     }
 }

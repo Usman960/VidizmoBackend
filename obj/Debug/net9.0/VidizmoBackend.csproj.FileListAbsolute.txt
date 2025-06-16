@@ -329,3 +329,8 @@ F:\VidizmoBackend\bin\Debug\net9.0\Azure.Storage.Common.dll
 F:\VidizmoBackend\bin\Debug\net9.0\System.IO.Hashing.dll
 F:\VidizmoBackend\bin\Debug\net9.0\DotNetEnv.dll
 F:\VidizmoBackend\bin\Debug\net9.0\Sprache.dll
+C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\Azure.Storage.Blobs.dll
+C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\Azure.Storage.Common.dll
+C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\DotNetEnv.dll
+C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\Sprache.dll
+C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\System.IO.Hashing.dll

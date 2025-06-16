@@ -12,14 +12,16 @@ namespace VidizmoBackend.Controllers
     public class VideoController : ControllerBase
     {
         private readonly VideoService _videoService;
+        private readonly RoleService _roleService;
 
-        public VideoController(VideoService videoService)
+        public VideoController(VideoService videoService,  RoleService roleService)
         {
             _videoService = videoService;
+            _roleService = roleService;
         }
 
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadVideo([FromForm] IFormFile file, [FromForm] AddVideoReqDto dto)
+        [HttpPost("upload/{orgId}")]
+        public async Task<IActionResult> UploadVideo([FromForm] IFormFile file, [FromForm] AddVideoReqDto dto, int orgId)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("File is required.");
@@ -30,7 +32,17 @@ namespace VidizmoBackend.Controllers
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
-                var saved = await _videoService.UploadVideoAsync(file, dto, userId);
+                // check if the user is authorized to upload videos
+                var permissionDto = new PermissionDto
+                {
+                    Action = "upload",
+                    Entity = "video"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to upload videos.");
+
+                var saved = await _videoService.UploadVideoAsync(file, dto, userId, orgId);
                 if (!saved)
                     return StatusCode(500, "Failed to upload video.");
 
@@ -44,9 +56,19 @@ namespace VidizmoBackend.Controllers
 
         [HttpGet("download/{videoId}")]
         public async Task<IActionResult> DownloadVideo(int videoId)
-        {
+        {  
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                var permissionDto = new PermissionDto
+                {
+                    Action = "download",
+                    Entity = "video"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to download videos.");
+
                 var stream = await _videoService.DownloadVideoAsync(videoId);
                 if (stream == null)
                     return NotFound("Video not found.");
@@ -66,8 +88,18 @@ namespace VidizmoBackend.Controllers
         [HttpGet("play/{videoId}")]
         public async Task<IActionResult> PlayVideo(int videoId)
         {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                var permissionDto = new PermissionDto
+                {
+                    Action = "play",
+                    Entity = "video"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to play videos.");
+
                 var (stream, contentType, fileName) = await _videoService.StreamVideoAsync(videoId);
 
                 return File(stream, contentType, enableRangeProcessing: true);
@@ -85,8 +117,18 @@ namespace VidizmoBackend.Controllers
         [HttpDelete("delete/{videoId}")]
         public async Task<IActionResult> DeleteVideo(int videoId)
         {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                var permissionDto = new PermissionDto
+                {
+                    Action = "delete",
+                    Entity = "video"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to delete videos.");
+
                 var deleted = await _videoService.DeleteVideoAsync(videoId);
                 if (!deleted)
                     return NotFound("Video not found or could not be deleted.");
@@ -102,8 +144,18 @@ namespace VidizmoBackend.Controllers
         [HttpGet("metadata/{videoId}")]
         public async Task<IActionResult> GetVideoMetadata(int videoId)
         {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                var permissionDto = new PermissionDto
+                {
+                    Action = "view",
+                    Entity = "metadata"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view metadata.");
+
                 var metadata = await _videoService.GetMetadataByIdAsync(videoId);
 
                 return Ok(metadata);
@@ -121,8 +173,18 @@ namespace VidizmoBackend.Controllers
         [HttpPut("metadata/{videoId}")]
         public async Task<IActionResult> EditVideoMetadata(int videoId, MetadataReqDto metadataReqDto)
         {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                 var permissionDto = new PermissionDto
+                {
+                    Action = "edit",
+                    Entity = "metadata"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to edit metadata.");
+
                 var updated = await _videoService.EditVideoMetadataAsync(metadataReqDto, videoId);
 
                 return Ok("Video metadata updated successfully.");

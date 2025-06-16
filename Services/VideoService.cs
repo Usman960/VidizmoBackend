@@ -16,7 +16,7 @@ namespace VidizmoBackend.Services
             _orgRepository = orgRepository;
         }
 
-        public async Task<bool> UploadVideoAsync(IFormFile file, AddVideoReqDto dto, int userId)
+        public async Task<bool> UploadVideoAsync(IFormFile file, AddVideoReqDto dto, int userId, int orgId)
         {
             var blobUrl = await _blobService.UploadFileAsync(file);
             if (string.IsNullOrEmpty(blobUrl))
@@ -24,7 +24,6 @@ namespace VidizmoBackend.Services
                 throw new InvalidOperationException("Failed to upload video to blob storage.");
             }
 
-            var org = await _orgRepository.GetOrgByUserIdAsync(userId);
             var video = new Video
             {
                 Filename = Path.GetFileNameWithoutExtension(file.FileName),
@@ -33,7 +32,7 @@ namespace VidizmoBackend.Services
                 Description = dto.Description,
                 UploadedByUserId = userId,
                 FilePath = blobUrl,
-                OrganizationId = org.OrganizationId,
+                OrganizationId = orgId,
                 UploadedAt = DateTime.UtcNow,
                 FileFormat = Path.GetExtension(file.FileName).TrimStart('.')
             };
@@ -100,6 +99,11 @@ namespace VidizmoBackend.Services
 
         public async Task<MetadataResDto> GetMetadataByIdAsync(int videoId)
         {
+            var video = await _videoRepository.GetVideoByIdAsync(videoId);
+            if (video == null)
+            {
+                throw new FileNotFoundException("Video not found.");
+            }
             var metadata = await _videoRepository.GetMetadataByIdAsync(videoId);
             if (metadata == null)
             {
@@ -113,6 +117,11 @@ namespace VidizmoBackend.Services
             if (metadataReqDto == null || videoId <= 0)
             {
                 throw new ArgumentException("Invalid metadata or video ID.");
+            }
+            var video = await _videoRepository.GetVideoByIdAsync(videoId);
+            if (video == null)
+            {
+                throw new FileNotFoundException("Video not found.");
             }
 
             var updated = await _videoRepository.EditVideoMetadataAsync(metadataReqDto, videoId);

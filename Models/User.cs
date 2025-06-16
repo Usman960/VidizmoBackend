@@ -8,7 +8,8 @@ namespace VidizmoBackend.Models {
         public DateTime CreatedAt { get; set; }
         public int? OrganizationId { get; set; } // Foreign key to the Organization this user belongs to
         public Organization? Organization { get; set; }
-
+        // Organization the user created
+        public Organization? OrganizationCreated { get; set; }  // one-to-one
         public ICollection<Group> GroupsCreated { get; set; }
 
         // Separate navigation for users who were added TO groups

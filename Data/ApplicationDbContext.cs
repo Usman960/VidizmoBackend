@@ -30,9 +30,15 @@ namespace VidizmoBackend.Data
                 .HasIndex(o => o.Name)
                 .IsUnique();
 
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Organization)
+                .WithMany(o => o.Users)
+                .HasForeignKey(u => u.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Organization>()
                 .HasOne(o => o.CreatedByUser)
-                .WithOne(u => u.Organization)
+                .WithOne(u => u.OrganizationCreated)  // << distinct navigation
                 .HasForeignKey<Organization>(o => o.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 

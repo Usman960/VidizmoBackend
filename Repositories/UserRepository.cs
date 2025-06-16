@@ -36,5 +36,17 @@ namespace VidizmoBackend.Repositories
             _context.Users.Update(user);
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<Organization?> GetOrganizationByUserIdAsync(int userId)
+        {
+            return await _context.Users
+                .Where(u => u.UserId == userId)
+                .Select(u => u.Organization)
+                .FirstOrDefaultAsync();
+        }
+        public async Task<User?> GetUserByIdAsync(int userId)
+        {
+            return await _context.Users.FindAsync(userId);
+        }
     }
 }

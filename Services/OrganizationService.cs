@@ -30,11 +30,11 @@ namespace VidizmoBackend.Services
                 throw new InvalidOperationException("Organization with this name already exists.");
             }
 
-            // Check if the user already belongs to an organization
-            if (await _organizationRepo.GetOrgByUserIdAsync(userId) != null)
-            {
+            var user = await _userRepo.GetUserByIdAsync(userId);
+            if (user == null)
+                throw new ArgumentException("User not found.");
+            if (user.OrganizationId.HasValue)
                 throw new InvalidOperationException("User already belongs to an organization.");
-            }
 
             var org = new Organization
             {

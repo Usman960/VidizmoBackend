@@ -20,11 +20,15 @@ namespace VidizmoBackend.Services
             {
                 throw new ArgumentException("Invalid user or organization ID.");
             }
-            // Check if the user already belongs to an organization
-            if (await _orgRepository.GetOrgByUserIdAsync(userId) != null)
-            {
+            var org = await _orgRepository.GetOrgByIdAsync(organizationId);
+            if (org == null)
+                throw new ArgumentException("Organization not found.");
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+                throw new ArgumentException("User not found.");
+            if (user.OrganizationId.HasValue)
                 throw new InvalidOperationException("User already belongs to an organization.");
-            }
+
             return await _userRepository.AssociateOrganizationWithUserAsync(userId, organizationId);
         }
     }
