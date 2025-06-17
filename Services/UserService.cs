@@ -7,10 +7,13 @@ namespace VidizmoBackend.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IOrgRepository _orgRepository;
-        public UserService(IUserRepository userRepository, IOrgRepository orgRepository)
+        private readonly IGroupRepository _groupRepository;
+
+        public UserService(IUserRepository userRepository, IOrgRepository orgRepository, IGroupRepository groupRepository)
         {
             _userRepository = userRepository;
             _orgRepository = orgRepository;
+            _groupRepository = groupRepository;
         }
 
         // Add a user to an organization
@@ -30,6 +33,24 @@ namespace VidizmoBackend.Services
                 throw new InvalidOperationException("User already belongs to an organization.");
 
             return await _userRepository.AssociateOrganizationWithUserAsync(userId, organizationId);
+        }
+
+        public async Task<bool> AddUsersToGroupAsync(int groupId, List<int> userIds, int userId)
+        {
+            if (groupId <= 0 || userIds == null || userIds.Count == 0 || userId <= 0)
+            {
+                throw new ArgumentException("Invalid group or user IDs.");
+            }
+
+            var group = await _groupRepository.GetGroupByIdAsync(groupId);
+            if (group == null)
+                throw new ArgumentException("Group not found.");
+
+            var users = await _userRepository.GetUsersByIdsAsync(userIds);
+            if (users.Count != userIds.Count)
+                throw new ArgumentException("No valid users found.");
+
+            return await _userRepository.AddUsersToGroupAsync(groupId, users, userId);
         }
     }
 }

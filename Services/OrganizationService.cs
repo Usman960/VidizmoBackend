@@ -68,7 +68,7 @@ namespace VidizmoBackend.Services
                 Status = "Active"
             };
 
-            if (!await _roleRepo.AssignRoleToUserAsync(UserOgGpRole))
+            if (!await _roleRepo.AssignRoleAsync(UserOgGpRole))
             {
                 throw new InvalidOperationException("Failed to assign role to user.");
             }

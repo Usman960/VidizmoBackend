@@ -1,5 +1,5 @@
 namespace VidizmoBackend.DTOs {
-    public class CreateRoleDto
+    public class RoleDto
     {
         public string Name { get; set; } // Name of the role
         public string Description { get; set; } // Description of the role

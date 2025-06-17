@@ -4,9 +4,6 @@ namespace VidizmoBackend.Models
     {
         public int ScopedTokenId { get; set; }
 
-        public int? UserId { get; set; }
-        public User? User { get; set; }
-
         // The organization context this token applies to (optional if global)
         public int OrganizationId { get; set; }
         public Organization Organization { get; set; }

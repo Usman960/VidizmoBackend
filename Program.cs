@@ -21,6 +21,8 @@ builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<IOrgRepository, OrgRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<GroupService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AzureBlobService>();
 builder.Services.AddScoped<VideoService>();

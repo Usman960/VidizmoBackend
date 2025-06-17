@@ -48,5 +48,27 @@ namespace VidizmoBackend.Repositories
         {
             return await _context.Users.FindAsync(userId);
         }
+
+        public async Task<bool> AddUsersToGroupAsync(int groupId, List<User> users, int userId)
+        {
+            foreach (var user in users) {
+                var userGroup = new UserGroup
+                {
+                    UserId = user.UserId,
+                    GroupId = groupId,
+                    AddedById = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.UserGroups.Add(userGroup);
+            }
+            return await _context.SaveChangesAsync() > 0; // Save changes and return success status
+        }
+        
+        public async Task<List<User>> GetUsersByIdsAsync(List<int> userIds)
+        {
+            return await _context.Users
+                .Where(u => userIds.Contains(u.UserId))
+                .ToListAsync();
+        }
     }
 }

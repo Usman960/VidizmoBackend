@@ -72,15 +72,15 @@ namespace VidizmoBackend.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<UserGroup>()
-                .HasOne(ug => ug.AddedUser)
+                .HasOne(ug => ug.User)
                 .WithMany(u => u.UserGroupsAddedTo) 
-                .HasForeignKey(ug => ug.AddedUserId)
+                .HasForeignKey(ug => ug.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<UserGroup>()
-                .HasOne(ug => ug.UserAddedByUser)
+                .HasOne(ug => ug.AddedBy)
                 .WithMany(u => u.UserGroupsAddedByMe)
-                .HasForeignKey(ug => ug.UserAddedByUserId)
+                .HasForeignKey(ug => ug.AddedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Video - VideoTag (many-to-many)
@@ -164,13 +164,6 @@ namespace VidizmoBackend.Data
                 .WithMany(u => u.TokensCreated) 
                 .HasForeignKey(st => st.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // Token is optionally assigned to a user
-            modelBuilder.Entity<ScopedToken>()
-                .HasOne(st => st.User)
-                .WithMany(u => u.ScopedTokensReceived) 
-                .HasForeignKey(st => st.UserId)
-                .OnDelete(DeleteBehavior.Restrict); 
 
             // Token is always tied to a portal
             modelBuilder.Entity<ScopedToken>()

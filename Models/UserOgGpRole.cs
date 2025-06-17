@@ -1,8 +1,8 @@
 namespace VidizmoBackend.Models {
     public class UserOgGpRole {
         public int UserOgGpRoleId {get; set;}
-        public int UserId {get; set;}
-        public User User {get; set;} // Navigation to the User this role belongs to
+        public int? UserId {get; set;}
+        public User? User {get; set;} // Navigation to the User this role belongs to
         public int OrganizationId {get; set;}
         public Organization Organization {get; set;} // Navigation to the Organization this role belongs to
         public int RoleId {get; set;}

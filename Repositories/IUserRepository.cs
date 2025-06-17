@@ -9,5 +9,9 @@ namespace VidizmoBackend.Repositories
         Task<bool> AssociateOrganizationWithUserAsync(int userId, int organizationId);
         Task<Organization?> GetOrganizationByUserIdAsync(int userId);
         Task<User?> GetUserByIdAsync(int userId);
+        // add mutliple users to a group
+        Task<bool> AddUsersToGroupAsync(int groupId, List<User> users, int userId);
+        // get users by their IDs
+        Task<List<User>> GetUsersByIdsAsync(List<int> userIds);
     }
 }

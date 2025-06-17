@@ -42,7 +42,7 @@ namespace VidizmoBackend.Repositories
             return null;
         }
 
-        public async Task<bool> AssignRoleToUserAsync(UserOgGpRole UserOgGpRole)
+        public async Task<bool> AssignRoleAsync(UserOgGpRole UserOgGpRole)
         {
             _context.UserOgGpRoles.Add(UserOgGpRole);
             return await _context.SaveChangesAsync() > 0;
@@ -127,6 +127,21 @@ namespace VidizmoBackend.Repositories
                 .Select(uor => uor.Role)
                 .ToListAsync();
             
+            // fetch groups from UserGroup table where user is part of the group
+            var userGroups = await _context.UserGroups
+                .Where(ug => ug.UserId == userId)
+                .Select(ug => ug.Group)
+                .ToListAsync();
+
+            // fetch roles from UserOgGpRole table for the groups where status is Active
+            var groupRoles = await _context.UserOgGpRoles
+                .Where(uor => userGroups.Any(ug => ug.GroupId == uor.GroupId) && uor.Status == "Active")
+                .Select(uor => uor.Role)
+                .ToListAsync();
+            
+            // take union of user roles and group roles
+            userRoles = userRoles.Union(groupRoles).ToList();
+            
             if (userRoles == null || userRoles.Count == 0) return false;
 
             // check if any role has the permission in RolePermissions table
@@ -151,6 +166,110 @@ namespace VidizmoBackend.Repositories
             return await _context.Roles
                 .Where(r => r.RoleId == roleId && r.CreatedByUser.OrganizationId == organizationId)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> RoleWithPermissionsExistsAsync(int organizationId, PermissionsDto permissionsDto) {
+            // fetch all roles for the organization from UserOgGpRole table
+            var roles = await _context.UserOgGpRoles
+                .Include(uor => uor.Role)
+                .Where(uor => uor.OrganizationId == organizationId)
+                .Select(uor => uor.Role)
+                .ToListAsync();
+
+            if (roles == null || roles.Count == 0) return false;
+
+            // check if any role has all permissions in RolePermissions table
+            foreach (var role in roles)
+            {
+                var permissions = await _context.RolePermissions
+                    .Where(rp => rp.RoleId == role.RoleId)
+                    .Select(rp => new PermissionDto
+                    {
+                        Action = rp.Permission.Action,
+                        Entity = rp.Permission.Entity
+                    })
+                    .ToListAsync();
+
+                // check if any permissions exactly match the permissions in permissionsDto
+                if (permissions.Count == permissionsDto.Permissions.Count &&
+                    permissions.All(p => permissionsDto.Permissions.Any(pd => pd.Action.ToLower() == p.Action.ToLower() && pd.Entity.ToLower() == p.Entity.ToLower())))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public async Task<bool> EditRoleAsync(int roleId, RoleDto dto) {
+            var role = await _context.Roles.FindAsync(roleId);
+            if (role == null) return false;
+
+            // Update role properties
+            role.Name = dto.Name;
+            role.Description = dto.Description;
+
+            // Clear existing permissions
+            var existingPermissions = await _context.RolePermissions
+                .Where(rp => rp.RoleId == roleId)
+                .ToListAsync();
+            _context.RolePermissions.RemoveRange(existingPermissions);
+
+            // Add new permissions
+            foreach (var permissionDto in dto.Permissions.Permissions)
+            {
+                var dbPermission = await _context.Permissions
+                    .FirstOrDefaultAsync(p =>
+                        p.Action.ToLower() == permissionDto.Action.ToLower() &&
+                        p.Entity.ToLower() == permissionDto.Entity.ToLower());
+
+                if (dbPermission == null)
+                    throw new InvalidOperationException(
+                        $"Permission '{permissionDto.Action}:{permissionDto.Entity}' not found in database.");
+
+                var rolePermission = new RolePermission
+                {
+                    RoleId = role.RoleId,
+                    PermissionId = dbPermission.PermissionId
+                };
+
+                _context.RolePermissions.Add(rolePermission);
+            }
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeleteRoleAsync(int roleId) {
+            var role = await _context.Roles.FindAsync(roleId);
+            if (role == null) return false;
+
+            // remove all assignments from UserOgGpRole
+            var assignments = await _context.UserOgGpRoles
+                .Where(uor => uor.RoleId == roleId)
+                .ToListAsync();
+            _context.UserOgGpRoles.RemoveRange(assignments);
+            
+            // Remove all role permissions
+            var rolePermissions = await _context.RolePermissions
+                .Where(rp => rp.RoleId == roleId)
+                .ToListAsync();
+            _context.RolePermissions.RemoveRange(rolePermissions);
+
+            // Remove the role itself
+            _context.Roles.Remove(role);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> RevokeRoleAsync(int userId, int userOgGpRoleId) {
+            var userOgGpRole = await _context.UserOgGpRoles.FindAsync(userOgGpRoleId);
+            if (userOgGpRole == null) return false;
+
+            // Set status to "Revoked"
+            userOgGpRole.Status = "Revoked";
+            userOgGpRole.RevokedAt = DateTime.UtcNow;
+            userOgGpRole.RevokedByUserId = userId;
+
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }
