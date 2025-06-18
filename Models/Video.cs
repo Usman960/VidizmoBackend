@@ -12,9 +12,10 @@ namespace VidizmoBackend.Models
         public DateTime UploadedAt  { get; set; } // Timestamp when the video was uploaded
         public int OrganizationId { get; set; } // FK to Organization
         public Organization Organization { get; set; } // Navigation to Organization
-        public int UploadedByUserId { get; set; } // FK to User
-        public User UploadedByUser { get; set; } // Navigation to User
-
+        public int? UploadedByUserId { get; set; } // FK to User
+        public User? UploadedByUser { get; set; } // Navigation to User
+        public int? ScopedTokenId { get; set; } // FK to ScopedToken
+        public ScopedToken? ScopedToken { get; set; } // Navigation to ScopedToken
         public ICollection<VideoTag> VideoTags { get; set; } // Navigation to VideoTags
     }
 }

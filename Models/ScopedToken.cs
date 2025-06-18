@@ -22,5 +22,7 @@ namespace VidizmoBackend.Models
 
         public int CreatedByUserId { get; set; }
         public User CreatedByUser { get; set; }
+
+        public ICollection<Video> Videos { get; set; } = new List<Video>();
     }
 }

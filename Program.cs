@@ -22,6 +22,8 @@ builder.Services.AddScoped<IOrgRepository, OrgRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<GroupService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AzureBlobService>();
@@ -53,6 +55,7 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 app.UseHttpsRedirection();
+app.UseMiddleware<TokenMiddleware>(); // 👈 Your scoped token middleware
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

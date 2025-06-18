@@ -16,7 +16,7 @@ namespace VidizmoBackend.Services
             _orgRepository = orgRepository;
         }
 
-        public async Task<bool> UploadVideoAsync(IFormFile file, AddVideoReqDto dto, int userId, int orgId)
+        public async Task<bool> UploadVideoAsync(IFormFile file, AddVideoReqDto dto, int? userId, int? scopedTokenId, int orgId)
         {
             var blobUrl = await _blobService.UploadFileAsync(file);
             if (string.IsNullOrEmpty(blobUrl))
@@ -31,6 +31,7 @@ namespace VidizmoBackend.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 UploadedByUserId = userId,
+                ScopedTokenId = scopedTokenId,
                 FilePath = blobUrl,
                 OrganizationId = orgId,
                 UploadedAt = DateTime.UtcNow,

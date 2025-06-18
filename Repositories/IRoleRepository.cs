@@ -31,5 +31,7 @@ namespace VidizmoBackend.Repositories
         Task<bool> DeleteAssignmentsByGroupId(int groupId);
         // check if role is assigned to admin
         Task<bool> IsRoleAssignedToAdminAsync(int roleId);
+        // get user permissions by user id
+        Task<PermissionsDto?> GetUserPermissionsAsync(int userId);
     }
 }

@@ -297,5 +297,51 @@ namespace VidizmoBackend.Repositories
             return await _context.UserOgGpRoles
                 .AnyAsync(uor => uor.RoleId == roleId && uor.UserId == uor.Organization.CreatedByUserId);
         }
+
+        public async Task<PermissionsDto?> GetUserPermissionsAsync(int userId)
+        {
+            // fetch roles from UserOgGpRole table for the user where status is Active
+            var userRoles = await _context.UserOgGpRoles
+                .Where(uor => uor.UserId == userId && uor.Status == "Active")
+                .Select(uor => uor.Role)
+                .ToListAsync();
+
+            // fetch groups from UserGroup table where user is part of the group
+            var userGroups = await _context.UserGroups
+                .Where(ug => ug.UserId == userId)
+                .Select(ug => ug.Group)
+                .ToListAsync();
+
+            var groupIds = userGroups.Select(ug => ug.GroupId).ToList();
+
+            var groupRoles = await _context.UserOgGpRoles
+                .Where(uor => uor.GroupId != null &&
+                            groupIds.Contains(uor.GroupId.Value) &&
+                            uor.Status == "Active")
+                .Select(uor => uor.Role)
+                .ToListAsync();
+
+            // take union of user roles and group roles
+            userRoles = userRoles.Union(groupRoles).ToList();
+
+            if (userRoles == null || userRoles.Count == 0) return null;
+
+            // fetch all permissions for the roles
+            var permissions = await _context.RolePermissions
+                .Where(rp => userRoles.Select(r => r.RoleId).Contains(rp.RoleId))
+                .Select(rp => new PermissionDto
+                {
+                    Action = rp.Permission.Action,
+                    Entity = rp.Permission.Entity
+                })
+                .ToListAsync();
+
+            if (permissions == null || permissions.Count == 0) return null;
+            
+            return new PermissionsDto
+            {
+                Permissions = permissions
+            };
+        }
     }
 }

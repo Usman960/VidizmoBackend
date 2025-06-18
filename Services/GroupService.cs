@@ -1,5 +1,4 @@
 using VidizmoBackend.Repositories;
-using VidizmoBackend.Services;
 using VidizmoBackend.Models;
 
 namespace VidizmoBackend.Services {

@@ -48,6 +48,13 @@ namespace VidizmoBackend.Data
                 .WithMany(u => u.Videos)
                 .HasForeignKey(v => v.UploadedByUserId);
 
+            // One-to-many: ScopedToken -> Videos
+            modelBuilder.Entity<Video>()
+                .HasOne(v => v.ScopedToken)
+                .WithMany(t => t.Videos)
+                .HasForeignKey(v => v.ScopedTokenId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Organization - Group
             modelBuilder.Entity<Group>()
                 .HasOne(g => g.Organization)

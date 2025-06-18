@@ -8,16 +8,17 @@ namespace VidizmoBackend.Controllers
 {
     [ApiController]
     [Route("api/video")]
-    [Authorize]
     public class VideoController : ControllerBase
     {
         private readonly VideoService _videoService;
         private readonly RoleService _roleService;
+        private readonly TokenService _tokenService;
 
-        public VideoController(VideoService videoService,  RoleService roleService)
+        public VideoController(VideoService videoService, RoleService roleService, TokenService tokenService)
         {
             _videoService = videoService;
             _roleService = roleService;
+            _tokenService = tokenService;
         }
 
         [HttpPost("upload/{orgId}")]
@@ -29,20 +30,31 @@ namespace VidizmoBackend.Controllers
             if (dto == null)
                 return BadRequest("Video details are required.");
 
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
+                    ? int.Parse(User.FindFirstValue("ScopedTokenId")!)
+                    : null;
+
+                int? userId = scopedTokenId == null
+                    ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
+                    : null;
+
                 // check if the user is authorized to upload videos
                 var permissionDto = new PermissionDto
                 {
                     Action = "upload",
                     Entity = "video"
                 };
-                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+
+                bool hasPermission = scopedTokenId.HasValue
+                    ? await _tokenService.TokenHasPermissionAsync(scopedTokenId.Value, permissionDto)
+                    : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
+
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to upload videos.");
 
-                var saved = await _videoService.UploadVideoAsync(file, dto, userId, orgId);
+                var saved = await _videoService.UploadVideoAsync(file, dto, userId, scopedTokenId, orgId);
                 if (!saved)
                     return StatusCode(500, "Failed to upload video.");
 
@@ -57,15 +69,25 @@ namespace VidizmoBackend.Controllers
         [HttpGet("download/{videoId}")]
         public async Task<IActionResult> DownloadVideo(int videoId)
         {  
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
+                    ? int.Parse(User.FindFirstValue("ScopedTokenId")!)
+                    : null;
+
+                int? userId = scopedTokenId == null
+                    ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
+                    : null;
+
                 var permissionDto = new PermissionDto
                 {
                     Action = "download",
                     Entity = "video"
                 };
-                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                bool hasPermission = scopedTokenId.HasValue
+                    ? await _tokenService.TokenHasPermissionAsync(scopedTokenId.Value, permissionDto)
+                    : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
+
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to download videos.");
 
@@ -88,15 +110,25 @@ namespace VidizmoBackend.Controllers
         [HttpGet("play/{videoId}")]
         public async Task<IActionResult> PlayVideo(int videoId)
         {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
+                    ? int.Parse(User.FindFirstValue("ScopedTokenId")!)
+                    : null;
+
+                int? userId = scopedTokenId == null
+                    ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
+                    : null;
+
                 var permissionDto = new PermissionDto
                 {
                     Action = "play",
                     Entity = "video"
                 };
-                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                bool hasPermission = scopedTokenId.HasValue
+                    ? await _tokenService.TokenHasPermissionAsync(scopedTokenId.Value, permissionDto)
+                    : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
+
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to play videos.");
 
@@ -144,15 +176,26 @@ namespace VidizmoBackend.Controllers
         [HttpGet("metadata/{videoId}")]
         public async Task<IActionResult> GetVideoMetadata(int videoId)
         {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            // int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
+                    ? int.Parse(User.FindFirstValue("ScopedTokenId")!)
+                    : null;
+
+                int? userId = scopedTokenId == null
+                    ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
+                    : null;
+
                 var permissionDto = new PermissionDto
                 {
                     Action = "view",
                     Entity = "metadata"
                 };
-                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                bool hasPermission = scopedTokenId.HasValue
+                    ? await _tokenService.TokenHasPermissionAsync(scopedTokenId.Value, permissionDto)
+                    : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
+
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view metadata.");
 
@@ -173,15 +216,25 @@ namespace VidizmoBackend.Controllers
         [HttpPut("metadata/{videoId}")]
         public async Task<IActionResult> EditVideoMetadata(int videoId, MetadataReqDto metadataReqDto)
         {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
+                    ? int.Parse(User.FindFirstValue("ScopedTokenId")!)
+                    : null;
+
+                int? userId = scopedTokenId == null
+                    ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
+                    : null;
+
                  var permissionDto = new PermissionDto
                 {
                     Action = "edit",
                     Entity = "metadata"
                 };
-                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                bool hasPermission = scopedTokenId.HasValue
+                    ? await _tokenService.TokenHasPermissionAsync(scopedTokenId.Value, permissionDto)
+                    : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
+
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to edit metadata.");
 
