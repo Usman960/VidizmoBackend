@@ -51,24 +51,47 @@ namespace VidizmoBackend.Repositories
 
         public async Task<bool> AddUsersToGroupAsync(int groupId, List<User> users, int userId)
         {
-            foreach (var user in users) {
-                var userGroup = new UserGroup
+            // filter out users that are already in the group
+            var existingUserGroups = await _context.UserGroups
+                .Where(ug => ug.GroupId == groupId && users.Select(u => u.UserId).Contains(ug.UserId))
+                .ToListAsync();
+
+            // skip users that are already in the group
+            var newUsers = users
+                .Where(u => !existingUserGroups.Any(ug => ug.UserId == u.UserId))
+                .Select(u => new UserGroup
                 {
-                    UserId = user.UserId,
+                    UserId = u.UserId,
                     GroupId = groupId,
                     AddedById = userId,
                     CreatedAt = DateTime.UtcNow
-                };
-                _context.UserGroups.Add(userGroup);
-            }
+                })
+                .ToList();
+        
+            _context.UserGroups.AddRange(newUsers);
             return await _context.SaveChangesAsync() > 0; // Save changes and return success status
         }
-        
+
         public async Task<List<User>> GetUsersByIdsAsync(List<int> userIds)
         {
             return await _context.Users
                 .Where(u => userIds.Contains(u.UserId))
                 .ToListAsync();
+        }
+        
+        public async Task<bool> RemoveUsersFromGroupAsync(int groupId, List<User> users)
+        {
+            var userGroups = await _context.UserGroups
+                .Where(ug => ug.GroupId == groupId && users.Select(u => u.UserId).Contains(ug.UserId))
+                .ToListAsync();
+
+            if (userGroups.Count == 0)
+            {
+                return false; // No matching user groups found
+            }
+
+            _context.UserGroups.RemoveRange(userGroups);
+            return await _context.SaveChangesAsync() > 0; // Save changes and return success status
         }
     }
 }

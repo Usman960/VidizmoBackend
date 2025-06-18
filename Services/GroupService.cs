@@ -39,7 +39,7 @@ namespace VidizmoBackend.Services {
             }
 
             // Delete the group
-            return await _groupRepository.DeleteGroupAsync(groupId);
+            return await _groupRepository.DeleteGroupAsync(group);
         }
     }
 }

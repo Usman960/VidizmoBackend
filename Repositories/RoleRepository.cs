@@ -119,29 +119,32 @@ namespace VidizmoBackend.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> UserHasPermissionAsync(int userId, PermissionDto permissionDto) 
+        public async Task<bool> UserHasPermissionAsync(int userId, PermissionDto permissionDto)
         {
             // fetch roles from UserOgGpRole table for the user where status is Active
             var userRoles = await _context.UserOgGpRoles
                 .Where(uor => uor.UserId == userId && uor.Status == "Active")
                 .Select(uor => uor.Role)
                 .ToListAsync();
-            
+
             // fetch groups from UserGroup table where user is part of the group
             var userGroups = await _context.UserGroups
                 .Where(ug => ug.UserId == userId)
                 .Select(ug => ug.Group)
                 .ToListAsync();
 
-            // fetch roles from UserOgGpRole table for the groups where status is Active
+            var groupIds = userGroups.Select(ug => ug.GroupId).ToList();
+
             var groupRoles = await _context.UserOgGpRoles
-                .Where(uor => userGroups.Any(ug => ug.GroupId == uor.GroupId) && uor.Status == "Active")
+                .Where(uor => uor.GroupId != null &&
+                            groupIds.Contains(uor.GroupId.Value) &&
+                            uor.Status == "Active")
                 .Select(uor => uor.Role)
                 .ToListAsync();
-            
+
             // take union of user roles and group roles
             userRoles = userRoles.Union(groupRoles).ToList();
-            
+
             if (userRoles == null || userRoles.Count == 0) return false;
 
             // check if any role has the permission in RolePermissions table
@@ -168,7 +171,8 @@ namespace VidizmoBackend.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<bool> RoleWithPermissionsExistsAsync(int organizationId, PermissionsDto permissionsDto) {
+        public async Task<bool> RoleWithPermissionsExistsAsync(int organizationId, PermissionsDto permissionsDto)
+        {
             // fetch all roles for the organization from UserOgGpRole table
             var roles = await _context.UserOgGpRoles
                 .Include(uor => uor.Role)
@@ -200,7 +204,8 @@ namespace VidizmoBackend.Repositories
             return false;
         }
 
-        public async Task<bool> EditRoleAsync(int roleId, RoleDto dto) {
+        public async Task<bool> EditRoleAsync(int roleId, RoleDto dto)
+        {
             var role = await _context.Roles.FindAsync(roleId);
             if (role == null) return false;
 
@@ -238,16 +243,19 @@ namespace VidizmoBackend.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> DeleteRoleAsync(int roleId) {
+        public async Task<bool> DeleteRoleAsync(int roleId)
+        {
             var role = await _context.Roles.FindAsync(roleId);
             if (role == null) return false;
+
+            // check if the role has been assigned to the creator of organization
 
             // remove all assignments from UserOgGpRole
             var assignments = await _context.UserOgGpRoles
                 .Where(uor => uor.RoleId == roleId)
                 .ToListAsync();
             _context.UserOgGpRoles.RemoveRange(assignments);
-            
+
             // Remove all role permissions
             var rolePermissions = await _context.RolePermissions
                 .Where(rp => rp.RoleId == roleId)
@@ -260,7 +268,8 @@ namespace VidizmoBackend.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> RevokeRoleAsync(int userId, int userOgGpRoleId) {
+        public async Task<bool> RevokeRoleAsync(int userId, int userOgGpRoleId)
+        {
             var userOgGpRole = await _context.UserOgGpRoles.FindAsync(userOgGpRoleId);
             if (userOgGpRole == null) return false;
 
@@ -270,6 +279,23 @@ namespace VidizmoBackend.Repositories
             userOgGpRole.RevokedByUserId = userId;
 
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeleteAssignmentsByGroupId(int groupId)
+        {
+            var assignments = await _context.UserOgGpRoles
+                .Where(uor => uor.GroupId == groupId)
+                .ToListAsync();
+            _context.RemoveRange(assignments);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> IsRoleAssignedToAdminAsync(int roleId)
+        {
+            // Check if the role is assigned to user Id who created the organization
+            return await _context.UserOgGpRoles
+                .AnyAsync(uor => uor.RoleId == roleId && uor.UserId == uor.Organization.CreatedByUserId);
         }
     }
 }

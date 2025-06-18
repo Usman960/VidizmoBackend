@@ -5,7 +5,7 @@ namespace VidizmoBackend.Repositories {
         // Create a new group
         Task<bool> CreateGroupAsync(Group group);
         // delete a group by its ID
-        Task<bool> DeleteGroupAsync(int groupId);
+        Task<bool> DeleteGroupAsync(Group group);
         // Get a group by its ID
         Task<Group?> GetGroupByIdAsync(int groupId);
     }

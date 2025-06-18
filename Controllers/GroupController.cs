@@ -21,7 +21,7 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpPost("{orgId}")]
-        public async Task<IActionResult> CreateGroup(int orgId, [FromBody] string groupName)
+        public async Task<IActionResult> CreateGroup(int orgId, CreateGroupDto dto)
         {
             try
             {
@@ -38,7 +38,7 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to create groups.");
                 }
-                var result = await _groupService.CreateGroupAsync(orgId, userId, groupName);
+                var result = await _groupService.CreateGroupAsync(orgId, userId, dto.GroupName);
                 if (!result)
                 {
                     return StatusCode(500, "An error occurred while creating the group.");
@@ -70,7 +70,8 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to delete groups.");
                 }
-                
+
+                await _roleService.DeleteAssignmentsByGroupId(groupId);
                 var result = await _groupService.DeleteGroupAsync(groupId);
                 if (!result)
                 {

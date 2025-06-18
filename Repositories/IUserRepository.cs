@@ -13,5 +13,7 @@ namespace VidizmoBackend.Repositories
         Task<bool> AddUsersToGroupAsync(int groupId, List<User> users, int userId);
         // get users by their IDs
         Task<List<User>> GetUsersByIdsAsync(List<int> userIds);
+        // delete users from a group
+        Task<bool> RemoveUsersFromGroupAsync(int groupId, List<User> users);
     }
 }

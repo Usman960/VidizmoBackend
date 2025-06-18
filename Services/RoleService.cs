@@ -8,11 +8,12 @@ namespace VidizmoBackend.Services
     {
         private readonly IRoleRepository _roleRepo;
         private readonly IUserRepository _userRepo;
-
-        public RoleService(IRoleRepository roleRepo, IUserRepository userRepo)
+        private readonly IGroupRepository _groupRepo;
+        public RoleService(IRoleRepository roleRepo, IUserRepository userRepo, IGroupRepository groupRepo)
         {
             _roleRepo = roleRepo;
             _userRepo = userRepo;
+            _groupRepo = groupRepo;
         }
 
         public async Task<bool> AssignRoleToUserAsync(int userId, int organizationId, int roleId, int assignedByUserId)
@@ -38,7 +39,8 @@ namespace VidizmoBackend.Services
             return await _roleRepo.AssignRoleAsync(userOgGpRole);
         }
 
-        public async Task<bool> CreateRoleAsync(int userId, RoleDto dto) {
+        public async Task<bool> CreateRoleAsync(int userId, RoleDto dto)
+        {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Description) || dto.Permissions == null)
             {
                 throw new ArgumentException("Invalid role data.");
@@ -118,13 +120,22 @@ namespace VidizmoBackend.Services
             return await _roleRepo.RevokeRoleAsync(userId, userOgGpRoleId);
         }
 
-        public async Task<bool> DeleteRoleAsync(int userId, int roleId)
+        public async Task<bool> DeleteRoleAsync(int roleId)
         {
-            if (userId <= 0 || roleId <= 0)
+            if (await _roleRepo.IsRoleAssignedToAdminAsync(roleId))
             {
-                throw new ArgumentException("Invalid user or role ID.");
+                throw new InvalidOperationException("Cannot delete a role that is assigned to an admin.");
             }
             return await _roleRepo.DeleteRoleAsync(roleId);
+        }
+
+        public async Task<bool> DeleteAssignmentsByGroupId(int groupId)
+        {
+            if (await _groupRepo.GetGroupByIdAsync(groupId) == null)
+            {
+                throw new ArgumentException("Group not found.");
+            }
+            return await _roleRepo.DeleteAssignmentsByGroupId(groupId);
         }
     }
 }

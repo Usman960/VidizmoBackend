@@ -27,5 +27,9 @@ namespace VidizmoBackend.Repositories
         Task<bool> DeleteRoleAsync(int roleId);
         // revoke role
         Task<bool> RevokeRoleAsync(int userId, int userOgGpRoleId);
+        // Delete all role assignments by group Id
+        Task<bool> DeleteAssignmentsByGroupId(int groupId);
+        // check if role is assigned to admin
+        Task<bool> IsRoleAssignedToAdminAsync(int roleId);
     }
 }

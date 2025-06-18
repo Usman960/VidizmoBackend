@@ -52,5 +52,23 @@ namespace VidizmoBackend.Services
 
             return await _userRepository.AddUsersToGroupAsync(groupId, users, userId);
         }
+
+        public async Task<bool> RemoveUsersFromGroupAsync(int groupId, List<int> userIds)
+        {
+            if (groupId <= 0 || userIds == null || userIds.Count == 0)
+            {
+                throw new ArgumentException("Invalid group or user IDs.");
+            }
+
+            var group = await _groupRepository.GetGroupByIdAsync(groupId);
+            if (group == null)
+                throw new ArgumentException("Group not found.");
+
+            var users = await _userRepository.GetUsersByIdsAsync(userIds);
+            if (users.Count != userIds.Count)
+                throw new ArgumentException("No valid users found.");
+
+            return await _userRepository.RemoveUsersFromGroupAsync(groupId, users);
+        }
     }
 }

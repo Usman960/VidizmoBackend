@@ -19,14 +19,12 @@ namespace VidizmoBackend.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> DeleteGroupAsync(int groupId)
+        public async Task<bool> DeleteGroupAsync(Group group)
         {
-            var group = await _context.Groups.FindAsync(groupId);
-            if (group == null)
-            {
-                return false; // Group not found
-            }
-
+            // delete all users in the group
+            var userGroups = _context.UserGroups.Where(ug => ug.GroupId == group.GroupId);
+            _context.UserGroups.RemoveRange(userGroups);
+            // delete the group
             _context.Groups.Remove(group);
             return await _context.SaveChangesAsync() > 0;
         }

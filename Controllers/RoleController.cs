@@ -49,7 +49,7 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpPost("assign/{userId}/{orgId}/{roleId}")]
+        [HttpPost("assign-user/{userId}/{orgId}/{roleId}")]
         public async Task<IActionResult> AssignRoleToUser(int userId, int orgId, int roleId)
         {
             try
@@ -80,7 +80,7 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpPost("assign/{groupId}/{orgId}/{roleId}")]
+        [HttpPost("assign-group/{groupId}/{orgId}/{roleId}")]
         public async Task<IActionResult> AssignRoleToGroup(int groupId, int orgId, int roleId)
         {
             try
@@ -159,7 +159,7 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to delete roles.");
                 }
-                var result = await _roleService.DeleteRoleAsync(userId, roleId);
+                var result = await _roleService.DeleteRoleAsync(roleId);
                 if (!result)
                 {
                     return StatusCode(500, "An error occurred while deleting the role.");

@@ -83,5 +83,37 @@ namespace VidizmoBackend.Controllers
                 return StatusCode(500, "An unexpected error occurred: " + ex.Message);
             }
         }
+
+        [HttpDelete("group/{groupId}")]
+        public async Task<IActionResult> RemoveUserFromGroup(int groupId, [FromBody] List<int> userIds)
+        {
+            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            try
+            {
+                // Check if the current user has permission to remove users from groups
+                var permissionDto = new PermissionDto
+                {
+                    Action = "delete_gp",
+                    Entity = "user"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(currentUserId, permissionDto);
+                if (!hasPermission)
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to remove users from groups.");
+
+                var result = await _userService.RemoveUsersFromGroupAsync(groupId, userIds);
+                if (!result)
+                    return StatusCode(500, "Failed to remove user from group.");
+
+                return Ok("User removed from group successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred: " + ex.Message);
+            }
+        }
     }
 }
