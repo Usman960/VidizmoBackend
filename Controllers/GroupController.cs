@@ -3,6 +3,8 @@ using VidizmoBackend.DTOs;
 using VidizmoBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using VidizmoBackend.Helpers;
+using VidizmoBackend.Models;
 
 namespace VidizmoBackend.Controllers
 {
@@ -13,11 +15,13 @@ namespace VidizmoBackend.Controllers
     {
         private readonly GroupService _groupService;
         private readonly RoleService _roleService;
+        private readonly AuditLogService _auditLogService;
 
-        public GroupController(GroupService groupService, RoleService roleService)
+        public GroupController(GroupService groupService, RoleService roleService, AuditLogService auditLogService)
         {
             _groupService = groupService;
             _roleService = roleService;
+            _auditLogService = auditLogService;
         }
 
         [HttpPost("{orgId}")]
@@ -43,6 +47,17 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while creating the group.");
                 }
+                var payload = AuditLogHelper.BuildPayload(new { orgId }, dto);
+
+                var log = new AuditLog
+                {
+                    Action = "create",
+                    Entity = "group",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("Group created successfully.");
             }
@@ -77,6 +92,17 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while deleting the group.");
                 }
+                var payload = AuditLogHelper.BuildPayload(routeData: new { groupId });
+
+                var log = new AuditLog
+                {
+                    Action = "delete",
+                    Entity = "group",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("Group deleted successfully.");
             }

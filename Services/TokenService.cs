@@ -72,6 +72,22 @@ namespace VidizmoBackend.Services
             return _tokenRepo.TokenHasPermissionAsync(scopes, permissionDto);
         }
 
+        public async Task<bool> DeleteTokenAsync(int tokenId)
+        {
+            var token = await _tokenRepo.GetTokenByIdAsync(tokenId);
+            if (token == null)
+                throw new InvalidOperationException("Token not found or already deleted.");
+            return await _tokenRepo.DeleteTokenAsync(token);
+        }
+
+        public async Task<bool> RevokeTokenAsync(int tokenId)
+        {
+            var token = await _tokenRepo.GetTokenByIdAsync(tokenId);
+            if (token == null)
+                throw new InvalidOperationException("Token not found or already revoked.");
+            return await _tokenRepo.RevokeTokenAsync(token);
+        }
+
     }
 }
 

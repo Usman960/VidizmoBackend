@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VidizmoBackend.Data;
 
@@ -11,9 +12,11 @@ using VidizmoBackend.Data;
 namespace VidizmoBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250619085121_AddedReqBodyinLogTable")]
+    partial class AddedReqBodyinLogTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,13 +37,15 @@ namespace VidizmoBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ApiReqBody")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Entity")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("PerformedById")
                         .HasColumnType("int");
@@ -51,11 +56,16 @@ namespace VidizmoBackend.Migrations
                     b.Property<int?>("TokenId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("AuditLogId");
 
                     b.HasIndex("PerformedById");
 
                     b.HasIndex("TokenId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("AuditLogs");
                 });
@@ -470,9 +480,16 @@ namespace VidizmoBackend.Migrations
                         .HasForeignKey("TokenId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("VidizmoBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("PerformedBy");
 
                     b.Navigation("Token");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("VidizmoBackend.Models.Group", b =>

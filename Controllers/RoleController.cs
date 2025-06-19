@@ -3,6 +3,9 @@ using VidizmoBackend.DTOs;
 using VidizmoBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using VidizmoBackend.Models;
+using System.Text.Json;
+using VidizmoBackend.Helpers;
 
 namespace VidizmoBackend.Controllers
 {
@@ -12,12 +15,13 @@ namespace VidizmoBackend.Controllers
     public class RoleController : ControllerBase
     {
         private readonly RoleService _roleService;
-
-        public RoleController(RoleService roleService)
+        private readonly AuditLogService _auditLogService;
+        public RoleController(RoleService roleService, AuditLogService auditLogService)
         {
             _roleService = roleService;
+            _auditLogService = auditLogService;
         }
-
+    
         [HttpPost]
         public async Task<IActionResult> CreateRole(RoleDto dto)
         {
@@ -40,6 +44,17 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while creating the role.");
                 }
+                var payload = AuditLogHelper.BuildPayload( bodyData: dto);
+
+                var log = new AuditLog
+                {
+                    Action = "create",
+                    Entity = "role",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("Role created successfully.");
             }
@@ -58,8 +73,8 @@ namespace VidizmoBackend.Controllers
                 // Check if the user has permission to assign roles
                 var permissionDto = new PermissionDto
                 {
-                    Action = "assign",
-                    Entity = "role"
+                    Action = "assign_role",
+                    Entity = "user"
                 };
                 var hasPermission = await _roleService.UserHasPermissionAsync(assignedByUserId, permissionDto);
                 if (!hasPermission)
@@ -71,6 +86,16 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while assigning the role.");
                 }
+                var payload = AuditLogHelper.BuildPayload(routeData: new { userId, orgId, roleId });
+                var log = new AuditLog
+                {
+                    Action = "assign_role",
+                    Entity = "user",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);;
 
                 return Ok("Role assigned successfully.");
             }
@@ -89,8 +114,8 @@ namespace VidizmoBackend.Controllers
                 // Check if the user has permission to assign roles to groups
                 var permissionDto = new PermissionDto
                 {
-                    Action = "assign",
-                    Entity = "role"
+                    Action = "assign_role",
+                    Entity = "group"
                 };
                 var hasPermission = await _roleService.UserHasPermissionAsync(assignedByUserId, permissionDto);
                 if (!hasPermission)
@@ -102,6 +127,16 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while assigning the role to the group.");
                 }
+                var payload = AuditLogHelper.BuildPayload(routeData: new { groupId, orgId, roleId });
+                var log = new AuditLog
+                {
+                    Action = "assign_role",
+                    Entity = "group",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = assignedByUserId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("Role assigned to group successfully.");
             }
@@ -133,6 +168,18 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while editing the role.");
                 }
+                
+                var payload = AuditLogHelper.BuildPayload(new { roleId }, dto);
+
+                var log = new AuditLog
+                {
+                    Action = "edit",
+                    Entity = "role",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("Role edited successfully.");
             }
@@ -165,6 +212,17 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(500, "An error occurred while deleting the role.");
                 }
 
+                var payload = AuditLogHelper.BuildPayload(routeData: new { roleId });
+                var log = new AuditLog
+                {
+                    Action = "delete",
+                    Entity = "role",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
                 return Ok("Role deleted successfully.");
             }
             catch (Exception ex)
@@ -195,6 +253,16 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while revoking the role.");
                 }
+                var payload = AuditLogHelper.BuildPayload(routeData: new { userOgGpRoleId });
+                var log = new AuditLog
+                {
+                    Action = "revoke",
+                    Entity = "role",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("Role revoked successfully.");
             }

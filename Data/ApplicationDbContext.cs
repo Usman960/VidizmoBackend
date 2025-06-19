@@ -21,7 +21,7 @@ namespace VidizmoBackend.Data
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<UserOgGpRole> UserOgGpRoles { get; set; }
         public DbSet<ScopedToken> ScopedTokens { get; set; }
-
+        public DbSet<AuditLog> AuditLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -61,7 +61,7 @@ namespace VidizmoBackend.Data
                 .WithMany(o => o.Groups)
                 .HasForeignKey(g => g.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             modelBuilder.Entity<Group>()
                 .HasOne(g => g.CreatedByUser)
                 .WithMany(u => u.GroupsCreated)
@@ -80,7 +80,7 @@ namespace VidizmoBackend.Data
 
             modelBuilder.Entity<UserGroup>()
                 .HasOne(ug => ug.User)
-                .WithMany(u => u.UserGroupsAddedTo) 
+                .WithMany(u => u.UserGroupsAddedTo)
                 .HasForeignKey(ug => ug.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -137,20 +137,20 @@ namespace VidizmoBackend.Data
                 .WithMany(o => o.UserOgGpRoles)
                 .HasForeignKey(uor => uor.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(uor => uor.Role)
                 .WithMany(r => r.UserOgGpRoles)
                 .HasForeignKey(uor => uor.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             // UserOgGpRole - AssignedByUser
             modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(upr => upr.AssignedByUser)
                 .WithMany() // no back-navigation from User
                 .HasForeignKey(upr => upr.AssignedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             // UserOgGpRole - AssignedByUser
             modelBuilder.Entity<UserOgGpRole>()
                 .HasOne(upr => upr.AssignedByUser)
@@ -168,14 +168,14 @@ namespace VidizmoBackend.Data
             // Token is created by a user (required)
             modelBuilder.Entity<ScopedToken>()
                 .HasOne(st => st.CreatedByUser)
-                .WithMany(u => u.TokensCreated) 
+                .WithMany(u => u.TokensCreated)
                 .HasForeignKey(st => st.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Token is always tied to a portal
             modelBuilder.Entity<ScopedToken>()
                 .HasOne(st => st.Organization)
-                .WithMany(p => p.ScopedTokens) 
+                .WithMany(p => p.ScopedTokens)
                 .HasForeignKey(st => st.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -183,6 +183,18 @@ namespace VidizmoBackend.Data
                 .HasOne(r => r.CreatedByUser)
                 .WithMany(u => u.Roles)
                 .HasForeignKey(r => r.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            modelBuilder.Entity<AuditLog>()
+                .HasOne(a => a.PerformedBy)
+                .WithMany() // No back-reference needed
+                .HasForeignKey(a => a.PerformedById)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
+
+            modelBuilder.Entity<AuditLog>()
+                .HasOne(a => a.Token)
+                .WithMany() // No back-reference needed
+                .HasForeignKey(a => a.TokenId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

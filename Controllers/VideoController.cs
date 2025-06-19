@@ -3,6 +3,9 @@ using VidizmoBackend.Services;
 using VidizmoBackend.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using VidizmoBackend.Models;
+using System.Text.Json;
+using VidizmoBackend.Helpers;
 
 namespace VidizmoBackend.Controllers
 {
@@ -13,12 +16,13 @@ namespace VidizmoBackend.Controllers
         private readonly VideoService _videoService;
         private readonly RoleService _roleService;
         private readonly TokenService _tokenService;
-
-        public VideoController(VideoService videoService, RoleService roleService, TokenService tokenService)
+        private readonly AuditLogService _auditLogService;
+        public VideoController(VideoService videoService, RoleService roleService, TokenService tokenService, AuditLogService auditLogService)
         {
             _videoService = videoService;
             _roleService = roleService;
             _tokenService = tokenService;
+            _auditLogService = auditLogService;
         }
 
         [HttpPost("upload/{orgId}")]
@@ -58,6 +62,17 @@ namespace VidizmoBackend.Controllers
                 if (!saved)
                     return StatusCode(500, "Failed to upload video.");
 
+                var payload = AuditLogHelper.BuildPayload(new { orgId }, dto);
+                var log = new AuditLog
+                {
+                    Action = "upload",
+                    Entity = "video",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    TokenId = scopedTokenId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
                 return Ok("Video uploaded successfully.");
             }
             catch (Exception ex)
@@ -95,6 +110,17 @@ namespace VidizmoBackend.Controllers
                 if (stream == null)
                     return NotFound("Video not found.");
 
+                var payload = AuditLogHelper.BuildPayload(routeData: new { videoId });
+                var log = new AuditLog
+                {
+                    Action = "download",
+                    Entity = "video",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    TokenId = scopedTokenId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
                 return File(stream, "application/octet-stream", $"video_{videoId}.mp4");
             }
             catch (FileNotFoundException)
@@ -134,6 +160,18 @@ namespace VidizmoBackend.Controllers
 
                 var (stream, contentType, fileName) = await _videoService.StreamVideoAsync(videoId);
 
+                var payload = AuditLogHelper.BuildPayload(routeData: new { videoId });
+                var log = new AuditLog
+                {
+                    Action = "play",
+                    Entity = "video",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    TokenId = scopedTokenId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
                 return File(stream, contentType, enableRangeProcessing: true);
             }
             catch (FileNotFoundException)
@@ -165,6 +203,17 @@ namespace VidizmoBackend.Controllers
                 if (!deleted)
                     return NotFound("Video not found or could not be deleted.");
 
+                var payload = AuditLogHelper.BuildPayload(routeData: new { videoId });
+                var log = new AuditLog
+                {
+                    Action = "delete",
+                    Entity = "video",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
                 return Ok("Video deleted successfully.");
             }
             catch (Exception ex)
@@ -176,7 +225,6 @@ namespace VidizmoBackend.Controllers
         [HttpGet("metadata/{videoId}")]
         public async Task<IActionResult> GetVideoMetadata(int videoId)
         {
-            // int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
                 int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
@@ -200,6 +248,18 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view metadata.");
 
                 var metadata = await _videoService.GetMetadataByIdAsync(videoId);
+
+                var payload = AuditLogHelper.BuildPayload(routeData: new { videoId });
+                var log = new AuditLog
+                {
+                    Action = "view",
+                    Entity = "metadata",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    TokenId = scopedTokenId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(metadata);
             }
@@ -239,6 +299,18 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to edit metadata.");
 
                 var updated = await _videoService.EditVideoMetadataAsync(metadataReqDto, videoId);
+                
+                var payload = AuditLogHelper.BuildPayload(new { videoId }, metadataReqDto);
+                var log = new AuditLog
+                {
+                    Action = "edit",
+                    Entity = "metadata",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    TokenId = scopedTokenId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("Video metadata updated successfully.");
             }

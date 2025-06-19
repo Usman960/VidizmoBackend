@@ -334,3 +334,6 @@ C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\Azure.St
 C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\DotNetEnv.dll
 C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\Sprache.dll
 C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\System.IO.Hashing.dll
+C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\Azure.Core.Amqp.dll
+C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\Azure.Messaging.ServiceBus.dll
+C:\Users\Usman.M\OneDrive - VIDIZMO.COM\VidizmoBackend\bin\Debug\net9.0\Microsoft.Azure.Amqp.dll

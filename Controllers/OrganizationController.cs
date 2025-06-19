@@ -3,6 +3,8 @@ using VidizmoBackend.DTOs;
 using VidizmoBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using VidizmoBackend.Helpers;
+using VidizmoBackend.Models;
 
 namespace VidizmoBackend.Controllers {
     [ApiController]
@@ -11,10 +13,11 @@ namespace VidizmoBackend.Controllers {
     public class OrganizationController : ControllerBase
     {
         private readonly OrganizationService _organizationService;
-
-        public OrganizationController(OrganizationService organizationService)
+        private readonly AuditLogService _auditLogService;
+        public OrganizationController(OrganizationService organizationService, AuditLogService auditLogService)
         {
             _organizationService = organizationService;
+            _auditLogService = auditLogService;
         }
 
         [HttpPost]
@@ -28,6 +31,17 @@ namespace VidizmoBackend.Controllers {
                 {
                     return StatusCode(500, "An error occurred while creating the organization.");
                 }
+                var payload = AuditLogHelper.BuildPayload(bodyData: dto);
+
+                var log = new AuditLog
+                {
+                    Action = "create",
+                    Entity = "org",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("Organization created successfully.");
             }

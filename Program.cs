@@ -8,6 +8,7 @@ using VidizmoBackend.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Azure.Messaging.ServiceBus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,13 @@ builder.Services.AddSingleton<JwtTokenGenerator>(); // Assuming stateless JWT he
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IVideoRepository, VideoRepository>();
 
+builder.Services.AddSingleton(sp => {
+  var conn = sp.GetRequiredService<IConfiguration>()["AzureServiceBus:ConnectionString"];
+  return new ServiceBusClient(conn);
+});
+builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddHostedService<AuditLogProcessor>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -51,9 +59,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 // Add controllers
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
-
+app.UseCors();
 app.UseHttpsRedirection();
 app.UseMiddleware<TokenMiddleware>(); // 👈 Your scoped token middleware
 app.UseAuthentication();

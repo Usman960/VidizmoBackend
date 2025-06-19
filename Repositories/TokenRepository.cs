@@ -58,6 +58,19 @@ namespace VidizmoBackend.Repositories
             return await _context.ScopedTokens.FindAsync(tokenId);
         }
 
+        public async Task<bool> DeleteTokenAsync(ScopedToken token)
+        {
+            _context.ScopedTokens.Remove(token);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> RevokeTokenAsync(ScopedToken token)
+        {
+            token.IsRevoked = true;
+            token.RevokedAt = DateTime.UtcNow;
+            _context.ScopedTokens.Update(token);
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }
 

@@ -3,6 +3,8 @@ using VidizmoBackend.Services;
 using VidizmoBackend.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using VidizmoBackend.Helpers;
+using VidizmoBackend.Models;
 
 namespace VidizmoBackend.Controllers
 {
@@ -13,11 +15,12 @@ namespace VidizmoBackend.Controllers
     {
         private readonly UserService _userService;
         private readonly RoleService _roleService;
-
-        public UserController(UserService userService, RoleService roleService)
+        private readonly AuditLogService _auditLogService;
+        public UserController(UserService userService, RoleService roleService, AuditLogService auditLogService)
         {
             _userService = userService;
             _roleService = roleService;
+            _auditLogService = auditLogService;
         }
 
         [HttpPost("org/{userId}/{orgId}")]
@@ -39,6 +42,18 @@ namespace VidizmoBackend.Controllers
                 var result = await _userService.AddUserToOrganizationAsync(userId, orgId);
                 if (!result)
                     return StatusCode(500, "Failed to add user to organization.");
+
+                var payload = AuditLogHelper.BuildPayload(routeData: new { userId, orgId });
+
+                var log = new AuditLog
+                {
+                    Action = "add_org",
+                    Entity = "user",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = currentUserId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("User added to organization successfully.");
             }
@@ -72,6 +87,18 @@ namespace VidizmoBackend.Controllers
                 if (!result)
                     return StatusCode(500, "Failed to add user to group.");
 
+                var payload = AuditLogHelper.BuildPayload(new { groupId }, userIds);
+
+                var log = new AuditLog
+                {
+                    Action = "add_gp",
+                    Entity = "user",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = currentUserId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
                 return Ok("User added to group successfully.");
             }
             catch (ArgumentException ex)
@@ -103,6 +130,18 @@ namespace VidizmoBackend.Controllers
                 var result = await _userService.RemoveUsersFromGroupAsync(groupId, userIds);
                 if (!result)
                     return StatusCode(500, "Failed to remove user from group.");
+
+                var payload = AuditLogHelper.BuildPayload(new { groupId }, userIds);
+
+                var log = new AuditLog
+                {
+                    Action = "delete_gp",
+                    Entity = "user",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = currentUserId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok("User removed from group successfully.");
             }
