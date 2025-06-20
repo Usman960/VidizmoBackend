@@ -73,6 +73,16 @@ namespace VidizmoBackend.Services
                 throw new InvalidOperationException("Failed to assign role to user.");
             }
             return true;
+        }
+
+        public async Task<string?> GetOrgNameById(int orgId)
+        {
+            var org = await _organizationRepo.GetOrgByIdAsync(orgId);
+            if (org == null)
+            {
+                throw new ArgumentException("Orgnaizatio not found");
+            }
+            return org.Name;
         }        
     }
 }

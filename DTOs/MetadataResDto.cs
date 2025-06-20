@@ -9,5 +9,6 @@ namespace VidizmoBackend.DTOs
         public DateTime UploadDate { get; set; } // Date when the video was uploaded
         public string UploadedBy { get; set; } // Username of the user who uploaded the video
         public double FileSize { get; set; } // Size of the video file in bytes
+        public string Format { get; set; }
     }
 }

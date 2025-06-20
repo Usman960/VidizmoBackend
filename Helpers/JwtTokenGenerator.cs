@@ -22,7 +22,8 @@ namespace VidizmoBackend.Helpers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Firstname)
+                new Claim(ClaimTypes.Name, user.Firstname),
+                new Claim("OrganizationId", user.OrganizationId?.ToString() ?? string.Empty),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtSettings:SecretKey"]!));

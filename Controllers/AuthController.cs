@@ -21,13 +21,13 @@ namespace VidizmoBackend.Controllers
             try {
                 var result = await _authService.AuthenticateAsync(dto);
                 if (result == null)
-                    return Unauthorized("Invalid email or password.");
+                    return Unauthorized(new { error = "Invalid email or password." });
 
                 return Ok(new { Token = result });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+                return StatusCode(500, new { error = "An unexpected error occurred: " + ex.Message });
             }
         }
 
@@ -38,21 +38,21 @@ namespace VidizmoBackend.Controllers
             {
                 var result = await _authService.SignUpAsync(dto);
                 if (!result)
-                    return StatusCode(500, "Something went wrong while creating the user.");
+                    return StatusCode(500, new { error = "Something went wrong while creating the user." });
                 
-                return Ok("User signed up successfully.");
+                return Ok(new { message = "User signed up successfully." });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { error = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+                return StatusCode(500, new { error = "An unexpected error occurred: " + ex.Message });
             }
         }
     }

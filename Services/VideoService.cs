@@ -132,5 +132,12 @@ namespace VidizmoBackend.Services
             }
             return true;
         }
+
+        public async Task<List<MetadataResDto>?> GetAllVideos(int orgId)
+        {
+            var org = await _orgRepository.GetOrgByIdAsync(orgId);
+            if (org == null) throw new ArgumentException("Invalid organization id");
+            return await _videoRepository.GetAllVideos(orgId);
+        }
     }
 }

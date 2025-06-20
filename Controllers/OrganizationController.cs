@@ -43,7 +43,7 @@ namespace VidizmoBackend.Controllers {
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Organization created successfully.");
+                return Ok(new { message = "Organization created successfully." });
             }
             catch (Exception ex)
             {
@@ -51,8 +51,19 @@ namespace VidizmoBackend.Controllers {
             }
         }
 
-        // [HttpDelete("{id}")]
-        // public async Task<IActionResult> DeleteOrganization(int id) { }
+        [HttpGet("{orgId}")]
+        public async Task<IActionResult> GetOrganizationById(int orgId)
+        {
+            try
+            {
+                var name = await _organizationService.GetOrgNameById(orgId);
+                return Ok(new { Name = name });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 
 }
