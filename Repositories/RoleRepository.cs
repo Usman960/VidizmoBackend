@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using VidizmoBackend.Data;
 using VidizmoBackend.Models;
 using VidizmoBackend.DTOs;
+using System.Transactions;
 
 namespace VidizmoBackend.Repositories
 {
@@ -50,31 +51,46 @@ namespace VidizmoBackend.Repositories
 
         public async Task<bool> CreateRoleAsync(Role role, PermissionsDto permissionsDto)
         {
-            // Add role first to get its ID
-            _context.Roles.Add(role);
-            await _context.SaveChangesAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            // Add matching permissions from DB
-            foreach (var permissionDto in permissionsDto.Permissions)
+            try
             {
-                var dbPermission = await _context.Permissions
-                    .FirstOrDefaultAsync(p =>
-                        p.Action.ToLower() == permissionDto.Action.ToLower() &&
-                        p.Entity.ToLower() == permissionDto.Entity.ToLower());
+                // Step 1: Add role
+                _context.Roles.Add(role);
+                await _context.SaveChangesAsync(); // role.RoleId is now available
 
-                if (dbPermission == null)
-                    throw new InvalidOperationException($"Permission '{permissionDto.Action}:{permissionDto.Entity}' not found in database.");
-
-                var rolePermission = new RolePermission
+                // Step 2: Validate and assign permissions
+                foreach (var permissionDto in permissionsDto.Permissions)
                 {
-                    RoleId = role.RoleId,
-                    PermissionId = dbPermission.PermissionId
-                };
+                    var dbPermission = await _context.Permissions
+                        .FirstOrDefaultAsync(p =>
+                            p.Action.ToLower() == permissionDto.Action.ToLower() &&
+                            p.Entity.ToLower() == permissionDto.Entity.ToLower());
 
-                _context.RolePermissions.Add(rolePermission);
+                    if (dbPermission == null)
+                    {
+                        throw new InvalidOperationException($"Permission '{permissionDto.Action}:{permissionDto.Entity}' not found in database.");
+                    }
+
+                    var rolePermission = new RolePermission
+                    {
+                        RoleId = role.RoleId,
+                        PermissionId = dbPermission.PermissionId
+                    };
+
+                    _context.RolePermissions.Add(rolePermission);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync(); // ✅ commits only if all succeeds
+
+                return true;
             }
-
-            return await _context.SaveChangesAsync() > 0;
+            catch
+            {
+                await transaction.RollbackAsync(); // ✅ undoes the saved role
+                throw;
+            }
         }
 
         public async Task<Role> CreateAdminRoleAsync(int organizationId, int userId)
@@ -337,11 +353,41 @@ namespace VidizmoBackend.Repositories
                 .ToListAsync();
 
             if (permissions == null || permissions.Count == 0) return null;
-            
+
             return new PermissionsDto
             {
                 Permissions = permissions
             };
+        }
+
+        public async Task<RolesDto> GetAllRoles(int orgId)
+        {
+            var roles = await _context.Roles
+                .Where(r => r.CreatedByUser.OrganizationId == orgId)
+                .Select(r => new RoleResDto
+                {
+                    RoleId = r.RoleId,
+                    Name = r.Name,
+                    Description = r.Description,
+                    Permissions = new PermissionsDto
+                    {
+                        Permissions = r.RolePermissions.Select(rp => new PermissionDto
+                        {
+                            Action = rp.Permission.Action,
+                            Entity = rp.Permission.Entity
+                        }).ToList()
+                    }
+                })
+                .ToListAsync();
+
+            return new RolesDto { rolesDto = roles };
+        }
+
+        public async Task<UserOgGpRole?> GetRoleAssignment(int userOgGpRoleId)
+        {
+            return await _context.UserOgGpRoles
+                .Where(uor => uor.UserOgGpRoleId == userOgGpRoleId)
+                .FirstOrDefaultAsync();
         }
     }
 }

@@ -33,5 +33,7 @@ namespace VidizmoBackend.Repositories
         Task<bool> IsRoleAssignedToAdminAsync(int roleId);
         // get user permissions by user id
         Task<PermissionsDto?> GetUserPermissionsAsync(int userId);
+        Task<RolesDto> GetAllRoles(int orgId);
+        Task<UserOgGpRole?> GetRoleAssignment(int userOgGpRole);
     }
 }

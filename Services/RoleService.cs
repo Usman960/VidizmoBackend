@@ -9,11 +9,13 @@ namespace VidizmoBackend.Services
         private readonly IRoleRepository _roleRepo;
         private readonly IUserRepository _userRepo;
         private readonly IGroupRepository _groupRepo;
-        public RoleService(IRoleRepository roleRepo, IUserRepository userRepo, IGroupRepository groupRepo)
+        private readonly IOrgRepository _orgRepo;
+        public RoleService(IRoleRepository roleRepo, IUserRepository userRepo, IGroupRepository groupRepo, IOrgRepository orgRepository)
         {
             _roleRepo = roleRepo;
             _userRepo = userRepo;
             _groupRepo = groupRepo;
+            _orgRepo = orgRepository;
         }
 
         public async Task<bool> AssignRoleToUserAsync(int userId, int organizationId, int roleId, int assignedByUserId)
@@ -108,6 +110,8 @@ namespace VidizmoBackend.Services
                 throw new InvalidOperationException("Role not found.");
             }
 
+            if (await _roleRepo.IsRoleAssignedToAdminAsync(existingRole.RoleId)) throw new InvalidOperationException("Cannot edit a role that is assigned to an admin.");
+
             return await _roleRepo.EditRoleAsync(existingRole.RoleId, dto);
         }
 
@@ -117,6 +121,10 @@ namespace VidizmoBackend.Services
             {
                 throw new ArgumentException("Invalid user or role assignment ID.");
             }
+            var roleAssignment = await _roleRepo.GetRoleAssignment(userOgGpRoleId);
+            if (roleAssignment == null) throw new ArgumentException("Invalid role assignment id");
+
+            if (await _roleRepo.IsRoleAssignedToAdminAsync(roleAssignment.RoleId)) throw new InvalidOperationException("Cannot revoke a role that is assigned to an admin.");
             return await _roleRepo.RevokeRoleAsync(userId, userOgGpRoleId);
         }
 
@@ -136,6 +144,14 @@ namespace VidizmoBackend.Services
                 throw new ArgumentException("Group not found.");
             }
             return await _roleRepo.DeleteAssignmentsByGroupId(groupId);
+        }
+
+        public async Task<RolesDto> GetAllRoles(int orgId)
+        {
+            var org = await _orgRepo.GetOrgByIdAsync(orgId);
+            if (org == null) throw new ArgumentException("Invalid organization id");
+
+            return await _roleRepo.GetAllRoles(orgId);
         }
     }
 }

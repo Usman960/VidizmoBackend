@@ -120,20 +120,15 @@ namespace VidizmoBackend.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<MetadataResDto>?> GetAllVideos(int orgId)
+        public async Task<List<GetAllVideosDto>?> GetAllVideos(int orgId)
         {
             var videoList = await _context.Videos
                 .Where(v => v.OrganizationId == orgId)
-                .Select(v => new MetadataResDto
+                .Select(v => new GetAllVideosDto
                 {
                     VideoId = v.VideoId,
                     Title = v.Title,
                     Description = v.Description,
-                    UploadDate = v.UploadedAt,
-                    FileSize = v.FileSize,
-                    Format = v.FileFormat,
-                    UploadedBy = v.UploadedByUser.Firstname + " " + v.UploadedByUser.Lastname,
-                    Tags = v.VideoTags.Select(t => t.Tag.Title).ToList()
                 })
                 .ToListAsync();
 

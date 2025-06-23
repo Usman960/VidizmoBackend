@@ -154,5 +154,47 @@ namespace VidizmoBackend.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred: " + ex.Message);
             }
         }
+
+        [HttpGet("{orgId}")]
+        public async Task<IActionResult> GetUsersWithRoles(int orgId)
+        {
+            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            try
+            {
+                // Check if the current user has permission to remove users from groups
+                var permissionDto = new PermissionDto
+                {
+                    Action = "view",
+                    Entity = "user"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(currentUserId, permissionDto);
+                if (!hasPermission)
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view users.");
+
+                var users = await _userService.GetUsersWithRolesAsync(orgId);
+
+                var payload = AuditLogHelper.BuildPayload(new { orgId });
+
+                var log = new AuditLog
+                {
+                    Action = "view",
+                    Entity = "user",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = currentUserId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
+                return Ok(users);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred: " + ex.Message);
+            }
+        }
     }
 }

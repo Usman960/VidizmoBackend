@@ -19,6 +19,6 @@ namespace VidizmoBackend.Repositories
         Task<bool> DeleteAllVideosByUserIdAsync(int userId);
         // get all videos uploaded by a user
         Task<List<Video>> GetAllVideosByUserIdAsync(int userId);
-        Task<List<MetadataResDto>?> GetAllVideos(int orgId);
+        Task<List<GetAllVideosDto>?> GetAllVideos(int orgId);
     }
 }

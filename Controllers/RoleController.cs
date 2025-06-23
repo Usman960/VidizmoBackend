@@ -21,7 +21,7 @@ namespace VidizmoBackend.Controllers
             _roleService = roleService;
             _auditLogService = auditLogService;
         }
-    
+
         [HttpPost]
         public async Task<IActionResult> CreateRole(RoleDto dto)
         {
@@ -44,7 +44,7 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while creating the role.");
                 }
-                var payload = AuditLogHelper.BuildPayload( bodyData: dto);
+                var payload = AuditLogHelper.BuildPayload(bodyData: dto);
 
                 var log = new AuditLog
                 {
@@ -56,7 +56,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Role created successfully.");
+                return Ok(new {message = "Role created successfully."});
             }
             catch (Exception ex)
             {
@@ -95,7 +95,7 @@ namespace VidizmoBackend.Controllers
                     PerformedById = userId,
                     Payload = payload
                 };
-                _ = _auditLogService.SendLogAsync(log);;
+                _ = _auditLogService.SendLogAsync(log); ;
 
                 return Ok("Role assigned successfully.");
             }
@@ -168,7 +168,7 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while editing the role.");
                 }
-                
+
                 var payload = AuditLogHelper.BuildPayload(new { roleId }, dto);
 
                 var log = new AuditLog
@@ -181,7 +181,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Role edited successfully.");
+                return Ok(new {message = "Role edited successfully."});
             }
             catch (Exception ex)
             {
@@ -271,6 +271,43 @@ namespace VidizmoBackend.Controllers
                 return StatusCode(500, "An unexpected error occurred: " + ex.Message);
             }
         }
-        
+
+        [HttpGet("{orgId}")]
+        public async Task<IActionResult> GetAllRoles(int orgId)
+        {
+            try
+            {
+                int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                // Check if the user has permission to revoke roles
+                var permissionDto = new PermissionDto
+                {
+                    Action = "view",
+                    Entity = "role"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view roles.");
+                }
+                var roles = await _roleService.GetAllRoles(orgId);
+                
+                var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
+                var log = new AuditLog
+                {
+                    Action = "view",
+                    Entity = "role",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
+                return Ok(roles);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
     }
 }

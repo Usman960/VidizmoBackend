@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VidizmoBackend.Data;
 using VidizmoBackend.Models;
+using VidizmoBackend.DTOs;
 
 namespace VidizmoBackend.Repositories
 {
@@ -67,7 +68,7 @@ namespace VidizmoBackend.Repositories
                     CreatedAt = DateTime.UtcNow
                 })
                 .ToList();
-        
+
             _context.UserGroups.AddRange(newUsers);
             return await _context.SaveChangesAsync() > 0; // Save changes and return success status
         }
@@ -78,7 +79,7 @@ namespace VidizmoBackend.Repositories
                 .Where(u => userIds.Contains(u.UserId))
                 .ToListAsync();
         }
-        
+
         public async Task<bool> RemoveUsersFromGroupAsync(int groupId, List<User> users)
         {
             var userGroups = await _context.UserGroups
@@ -93,5 +94,71 @@ namespace VidizmoBackend.Repositories
             _context.UserGroups.RemoveRange(userGroups);
             return await _context.SaveChangesAsync() > 0; // Save changes and return success status
         }
+        
+        public async Task<List<UserWithRolesDto>> GetUsersWithRolesAsync(int orgId)
+        {
+            // Step 1: Get all users in this org (based on direct or group assignment)
+            var users = await _context.Users
+                .Where(u => _context.UserOgGpRoles.Any(r =>
+                            r.OrganizationId == orgId &&
+                            r.Status == "Active" &&
+                            (r.UserId == u.UserId || (
+                                r.GroupId != null &&
+                                _context.UserGroups.Any(ug => ug.UserId == u.UserId && ug.GroupId == r.GroupId)
+                            ))
+                ))
+                .ToListAsync();
+
+            // Step 2: For each user, fetch direct and group-based role assignments
+            var userDtos = new List<UserWithRolesDto>();
+
+            foreach (var user in users)
+            {
+                // Direct roles
+                var directRoles = await _context.UserOgGpRoles
+                    .Where(ur =>
+                        ur.OrganizationId == orgId &&
+                        ur.Status == "Active" &&
+                        ur.UserId == user.UserId)
+                    .Include(ur => ur.Role)
+                    .ToListAsync();
+
+                // Group-based roles
+                var groupIds = await _context.UserGroups
+                    .Where(ug => ug.UserId == user.UserId)
+                    .Select(ug => ug.GroupId)
+                    .ToListAsync();
+
+                var groupRoles = await _context.UserOgGpRoles
+                    .Where(ur =>
+                        ur.OrganizationId == orgId &&
+                        ur.Status == "Active" &&
+                        ur.GroupId != null &&
+                        groupIds.Contains(ur.GroupId.Value))
+                    .Include(ur => ur.Role)
+                    .ToListAsync();
+
+                // Combine both
+                var allRoles = directRoles
+                    .Concat(groupRoles)
+                    .Select(ur => new RoleAssignments
+                    {
+                        UserOgGpRoleId = ur.UserOgGpRoleId,
+                        RoleName = ur.Role.Name
+                    })
+                    .ToList();
+
+                userDtos.Add(new UserWithRolesDto
+                {
+                    UserId = user.UserId,
+                    Fullname = $"{user.Firstname} {user.Lastname ?? ""}",
+                    Email = user.Email,
+                    Roles = allRoles
+                });
+            }
+
+            return userDtos;
+        }
+
     }
 }

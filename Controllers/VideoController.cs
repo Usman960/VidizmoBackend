@@ -73,7 +73,7 @@ namespace VidizmoBackend.Controllers
                     Payload = payload
                 };
                 _ = _auditLogService.SendLogAsync(log);
-                return Ok("Video uploaded successfully.");
+                return Ok(new {message = "Video uploaded successfully." });
             }
             catch (Exception ex)
             {
@@ -348,7 +348,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Video metadata updated successfully.");
+                return Ok(new {message = "Video metadata updated successfully."});
             }
             catch (InvalidOperationException ex)
             {
