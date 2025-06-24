@@ -71,6 +71,20 @@ namespace VidizmoBackend.Repositories
             _context.ScopedTokens.Update(token);
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<List<TokenViewDto>> GetTokensByUserIdAsync(int userId)
+        {
+            return await _context.ScopedTokens
+                .Where(t => t.CreatedByUserId == userId && t.ExpiresAt > DateTime.UtcNow ) // Or .CreatedByUserId depending on your model
+                .Select(t => new TokenViewDto
+                {
+                    TokenId = t.ScopedTokenId,
+                    ScopeJson = t.ScopeJson,
+                    ExpiresAt = t.ExpiresAt,
+                    IsRevoked = t.IsRevoked
+                })
+                .ToListAsync();
+        }
     }
 }
 

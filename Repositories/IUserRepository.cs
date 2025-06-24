@@ -1,3 +1,4 @@
+using VidizmoBackend.DTOs;
 using VidizmoBackend.Models;
 
 namespace VidizmoBackend.Repositories
@@ -10,11 +11,14 @@ namespace VidizmoBackend.Repositories
         Task<Organization?> GetOrganizationByUserIdAsync(int userId);
         Task<User?> GetUserByIdAsync(int userId);
         // add mutliple users to a group
-        Task<bool> AddUsersToGroupAsync(int groupId, List<User> users, int userId);
+        Task<bool> AddUserToGroupAsync(int groupId, int userId, int currentUserId);
         // get users by their IDs
         Task<List<User>> GetUsersByIdsAsync(List<int> userIds);
         // delete users from a group
-        Task<bool> RemoveUsersFromGroupAsync(int groupId, List<User> users);
+        Task<bool> RemoveUserFromGroupAsync(int groupId, int userId);
         Task<List<UserWithRolesDto>> GetUsersWithRolesAsync(int orgId);
+        Task<User?> GetUserByEmail(string email);
+        Task<List<UsersNotInGroupDto>> GetUsersNotInGroup(int groupId);
+        Task<User?> GetUserByGroupId(int groupId, int userId);
     }
 }

@@ -111,5 +111,46 @@ namespace VidizmoBackend.Controllers
                 return StatusCode(500, "An unexpected error occurred: " + ex.Message);
             }
         }
+
+        [HttpGet("{orgId}")]
+        public async Task<IActionResult> GetDetailedGroupList(int orgId)
+        {
+            try
+            {
+                int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+                var permissionDto = new PermissionDto
+                {
+                    Action = "view",
+                    Entity = "group"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view groups.");
+                }
+
+                var list = await _groupService.GetGroupLists(orgId);
+               
+                var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
+
+                var log = new AuditLog
+                {
+                    Action = "view",
+                    Entity = "group",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
+                return Ok(new {groupLists = list});
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while retrieving groups: {ex.Message}");
+            }
+        }
+
     }
 }

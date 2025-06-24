@@ -9,7 +9,7 @@ namespace VidizmoBackend.Services
     {
         private readonly ITokenRepository _tokenRepo;
         private readonly IRoleRepository _roleRepo;
-
+        private readonly IUserRepository _userRepo;
         private readonly List<(string action, string entity)> _allowedScope =
             new()
             {
@@ -20,10 +20,11 @@ namespace VidizmoBackend.Services
                 ("download", "video")
             };
 
-        public TokenService(ITokenRepository tokenRepo, IRoleRepository roleRepo)
+        public TokenService(ITokenRepository tokenRepo, IRoleRepository roleRepo, IUserRepository userRepo)
         {
             _tokenRepo = tokenRepo;
             _roleRepo = roleRepo;
+            _userRepo = userRepo;
         }
 
         public async Task<string> GenerateScopedTokenAsync(int userId, int orgId, TokenDto dto)
@@ -86,6 +87,16 @@ namespace VidizmoBackend.Services
             if (token == null)
                 throw new InvalidOperationException("Token not found or already revoked.");
             return await _tokenRepo.RevokeTokenAsync(token);
+        }
+
+        public async Task<List<TokenViewDto>> GetTokensByUserId(int userId)
+        {
+            if (userId <= 0) throw new ArgumentException("Invalid user Id");
+
+            var user = await _userRepo.GetUserByIdAsync(userId);
+            if (user == null) throw new ArgumentException("User not found");
+
+            return await _tokenRepo.GetTokensByUserIdAsync(userId); 
         }
 
     }

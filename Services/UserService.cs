@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+using VidizmoBackend.DTOs;
 using VidizmoBackend.Models;
 using VidizmoBackend.Repositories;
 
@@ -17,27 +19,27 @@ namespace VidizmoBackend.Services
         }
 
         // Add a user to an organization
-        public async Task<bool> AddUserToOrganizationAsync(int userId, int organizationId)
+        public async Task<bool> AddUserToOrganizationAsync(int organizationId, string email)
         {
-            if (userId <= 0 || organizationId <= 0)
+            if (String.IsNullOrEmpty(email) || organizationId <= 0)
             {
                 throw new ArgumentException("Invalid user or organization ID.");
             }
             var org = await _orgRepository.GetOrgByIdAsync(organizationId);
             if (org == null)
                 throw new ArgumentException("Organization not found.");
-            var user = await _userRepository.GetUserByIdAsync(userId);
+            var user = await _userRepository.GetUserByEmailAsync(email);
             if (user == null)
                 throw new ArgumentException("User not found.");
             if (user.OrganizationId.HasValue)
                 throw new InvalidOperationException("User already belongs to an organization.");
 
-            return await _userRepository.AssociateOrganizationWithUserAsync(userId, organizationId);
+            return await _userRepository.AssociateOrganizationWithUserAsync(user.UserId, organizationId);
         }
 
-        public async Task<bool> AddUsersToGroupAsync(int groupId, List<int> userIds, int userId)
+        public async Task<bool> AddUserToGroupAsync(int groupId, int userId, int currentUserId)
         {
-            if (groupId <= 0 || userIds == null || userIds.Count == 0 || userId <= 0)
+            if (groupId <= 0 || userId <= 0|| currentUserId <= 0)
             {
                 throw new ArgumentException("Invalid group or user IDs.");
             }
@@ -46,29 +48,32 @@ namespace VidizmoBackend.Services
             if (group == null)
                 throw new ArgumentException("Group not found.");
 
-            var users = await _userRepository.GetUsersByIdsAsync(userIds);
-            if (users.Count != userIds.Count)
-                throw new ArgumentException("No valid users found.");
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+                throw new ArgumentException("User not found.");
 
-            return await _userRepository.AddUsersToGroupAsync(groupId, users, userId);
+            user = await _userRepository.GetUserByGroupId(groupId, userId);
+            if (user != null) throw new ArgumentException("User is already part of group");
+
+            return await _userRepository.AddUserToGroupAsync(groupId, userId, currentUserId);
         }
 
-        public async Task<bool> RemoveUsersFromGroupAsync(int groupId, List<int> userIds)
+        public async Task<bool> RemoveUserFromGroupAsync(int groupId, int userId)
         {
-            if (groupId <= 0 || userIds == null || userIds.Count == 0)
+            if (groupId <= 0 || userId <= 0)
             {
-                throw new ArgumentException("Invalid group or user IDs.");
+                throw new ArgumentException("Invalid group or user ID.");
             }
 
             var group = await _groupRepository.GetGroupByIdAsync(groupId);
             if (group == null)
                 throw new ArgumentException("Group not found.");
 
-            var users = await _userRepository.GetUsersByIdsAsync(userIds);
-            if (users.Count != userIds.Count)
-                throw new ArgumentException("No valid users found.");
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+                throw new ArgumentException("User not found.");
 
-            return await _userRepository.RemoveUsersFromGroupAsync(groupId, users);
+            return await _userRepository.RemoveUserFromGroupAsync(groupId, userId);
         }
 
         public async Task<List<UserWithRolesDto>> GetUsersWithRolesAsync(int orgId)
@@ -78,6 +83,14 @@ namespace VidizmoBackend.Services
                 throw new ArgumentException("Organization not found.");
 
             return await _userRepository.GetUsersWithRolesAsync(orgId);
+        }
+
+        public async Task<List<UsersNotInGroupDto>> GetUsersNotInGroup(int groupId)
+        {
+            var group = await _groupRepository.GetGroupByIdAsync(groupId);
+            if (group == null) throw new ArgumentException("Group not found.");
+
+            return await _userRepository.GetUsersNotInGroup(groupId);
         }
     }
 }

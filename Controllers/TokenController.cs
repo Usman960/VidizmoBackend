@@ -10,6 +10,7 @@ namespace VidizmoBackend.Controllers
 {
     [ApiController]
     [Route("api/token")]
+    [Authorize]
     public class TokencController : ControllerBase
     {
         private readonly TokenService _tokenService;
@@ -51,7 +52,9 @@ namespace VidizmoBackend.Controllers
                     Payload = payload
                 };
                 _ = _auditLogService.SendLogAsync(log);
-                return Ok(new { Token = token });
+                var content = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(token));
+                var fileName = $"scoped-token-{DateTime.UtcNow:yyyyMMdd-HHmmss}.txt";
+                return File(content, "text/plain", fileName); ;
             }
             catch (InvalidOperationException ex)
             {
@@ -152,6 +155,23 @@ namespace VidizmoBackend.Controllers
                 return StatusCode(500, "An unexpected error occurred: " + ex.Message);
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMyScopedTokens()
+        {
+            try
+            {
+                int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var result = await _tokenService.GetTokensByUserId(userId);
+
+                return Ok(new { tokens = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
+
     }
 }
 

@@ -11,6 +11,7 @@ namespace VidizmoBackend.Repositories
         Task<ScopedToken?> GetTokenByIdAsync(int tokenId);
         Task<bool> DeleteTokenAsync(ScopedToken token);
         Task<bool> RevokeTokenAsync(ScopedToken token);
+        Task<List<TokenViewDto>> GetTokensByUserIdAsync(int userId);
     }
 }
 

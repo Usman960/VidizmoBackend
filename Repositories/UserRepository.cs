@@ -50,26 +50,17 @@ namespace VidizmoBackend.Repositories
             return await _context.Users.FindAsync(userId);
         }
 
-        public async Task<bool> AddUsersToGroupAsync(int groupId, List<User> users, int userId)
+        public async Task<bool> AddUserToGroupAsync(int groupId, int userId, int currentUserId)
         {
-            // filter out users that are already in the group
-            var existingUserGroups = await _context.UserGroups
-                .Where(ug => ug.GroupId == groupId && users.Select(u => u.UserId).Contains(ug.UserId))
-                .ToListAsync();
+            var newUser = new UserGroup
+            {
+                UserId = userId,
+                GroupId = groupId,
+                AddedById = currentUserId,
+                CreatedAt = DateTime.UtcNow
+            };
 
-            // skip users that are already in the group
-            var newUsers = users
-                .Where(u => !existingUserGroups.Any(ug => ug.UserId == u.UserId))
-                .Select(u => new UserGroup
-                {
-                    UserId = u.UserId,
-                    GroupId = groupId,
-                    AddedById = userId,
-                    CreatedAt = DateTime.UtcNow
-                })
-                .ToList();
-
-            _context.UserGroups.AddRange(newUsers);
+            _context.UserGroups.Add(newUser);
             return await _context.SaveChangesAsync() > 0; // Save changes and return success status
         }
 
@@ -80,41 +71,33 @@ namespace VidizmoBackend.Repositories
                 .ToListAsync();
         }
 
-        public async Task<bool> RemoveUsersFromGroupAsync(int groupId, List<User> users)
+        public async Task<bool> RemoveUserFromGroupAsync(int groupId, int userId)
         {
-            var userGroups = await _context.UserGroups
-                .Where(ug => ug.GroupId == groupId && users.Select(u => u.UserId).Contains(ug.UserId))
-                .ToListAsync();
+            var userGroup = await _context.UserGroups
+                .Where(ug => ug.GroupId == groupId && ug.UserId == userId)
+                .FirstOrDefaultAsync();
 
-            if (userGroups.Count == 0)
-            {
-                return false; // No matching user groups found
-            }
-
-            _context.UserGroups.RemoveRange(userGroups);
+            _context.UserGroups.Remove(userGroup);
             return await _context.SaveChangesAsync() > 0; // Save changes and return success status
         }
-        
+
         public async Task<List<UserWithRolesDto>> GetUsersWithRolesAsync(int orgId)
         {
-            // Step 1: Get all users in this org (based on direct or group assignment)
             var users = await _context.Users
-                .Where(u => _context.UserOgGpRoles.Any(r =>
-                            r.OrganizationId == orgId &&
-                            r.Status == "Active" &&
-                            (r.UserId == u.UserId || (
-                                r.GroupId != null &&
-                                _context.UserGroups.Any(ug => ug.UserId == u.UserId && ug.GroupId == r.GroupId)
-                            ))
-                ))
+                .Where(u => u.OrganizationId == orgId)
                 .ToListAsync();
 
-            // Step 2: For each user, fetch direct and group-based role assignments
             var userDtos = new List<UserWithRolesDto>();
 
             foreach (var user in users)
             {
-                // Direct roles
+                // Get group IDs for this user
+                var groupIds = await _context.UserGroups
+                    .Where(ug => ug.UserId == user.UserId)
+                    .Select(ug => ug.GroupId)
+                    .ToListAsync();
+
+                // Get direct roles
                 var directRoles = await _context.UserOgGpRoles
                     .Where(ur =>
                         ur.OrganizationId == orgId &&
@@ -123,41 +106,80 @@ namespace VidizmoBackend.Repositories
                     .Include(ur => ur.Role)
                     .ToListAsync();
 
-                // Group-based roles
-                var groupIds = await _context.UserGroups
-                    .Where(ug => ug.UserId == user.UserId)
-                    .Select(ug => ug.GroupId)
-                    .ToListAsync();
+                // Get group-based roles
+                var groupRoles = new List<UserOgGpRole>();
 
-                var groupRoles = await _context.UserOgGpRoles
-                    .Where(ur =>
-                        ur.OrganizationId == orgId &&
-                        ur.Status == "Active" &&
-                        ur.GroupId != null &&
-                        groupIds.Contains(ur.GroupId.Value))
-                    .Include(ur => ur.Role)
-                    .ToListAsync();
-
-                // Combine both
-                var allRoles = directRoles
-                    .Concat(groupRoles)
-                    .Select(ur => new RoleAssignments
-                    {
-                        UserOgGpRoleId = ur.UserOgGpRoleId,
-                        RoleName = ur.Role.Name
-                    })
-                    .ToList();
+                if (groupIds.Any())
+                {
+                    groupRoles = await _context.UserOgGpRoles
+                        .Where(ur =>
+                            ur.OrganizationId == orgId &&
+                            ur.Status == "Active" &&
+                            ur.GroupId != null &&
+                            groupIds.Contains(ur.GroupId.Value))
+                        .Include(ur => ur.Role)
+                        .ToListAsync();
+                }
 
                 userDtos.Add(new UserWithRolesDto
                 {
                     UserId = user.UserId,
                     Fullname = $"{user.Firstname} {user.Lastname ?? ""}",
                     Email = user.Email,
-                    Roles = allRoles
+                    IndividualRoles = directRoles.Select(ur => new RoleAssignments
+                    {
+                        UserOgGpRoleId = ur.UserOgGpRoleId,
+                        RoleName = ur.Role.Name
+                    }).ToList(),
+
+                    GroupRoles = groupRoles.Select(ur => new RoleAssignments
+                    {
+                        UserOgGpRoleId = ur.UserOgGpRoleId,
+                        RoleName = ur.Role.Name
+                    }).ToList()
                 });
             }
 
             return userDtos;
+        }
+
+        public async Task<User?> GetUserByEmail(string email)
+        {
+            return await _context.Users
+                .Where(u => u.Email == email)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<UsersNotInGroupDto>> GetUsersNotInGroup(int groupId)
+        {
+            var userIdsInGroup = await _context.UserGroups
+                .Where(ug => ug.GroupId == groupId)
+                .Select(ug => ug.UserId)
+                .ToListAsync();
+
+            var orgId = await _context.UserGroups
+                .Where(ug => ug.GroupId == groupId)
+                .Select(ug => ug.User.OrganizationId)
+                .FirstOrDefaultAsync();
+
+            var usersNotInGroup = await _context.Users
+                .Where(u => !userIdsInGroup.Contains(u.UserId) && orgId == u.OrganizationId)
+                .Select(u => new UsersNotInGroupDto
+                {
+                    UserId = u.UserId,
+                    Email = u.Email
+                })
+                .ToListAsync();
+
+            return usersNotInGroup;
+        }
+
+        public async Task<User?> GetUserByGroupId(int groupId, int userId)
+        {
+            return await _context.UserGroups
+                .Where(ug => ug.UserId == userId && ug.GroupId == groupId)
+                .Select(ug => ug.User)
+                .FirstOrDefaultAsync();
         }
 
     }

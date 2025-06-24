@@ -23,8 +23,8 @@ namespace VidizmoBackend.Controllers
             _auditLogService = auditLogService;
         }
 
-        [HttpPost("org/{userId}/{orgId}")]
-        public async Task<IActionResult> AddUserToOrganization(int userId, int orgId)
+        [HttpPost("org/{orgId}")]
+        public async Task<IActionResult> AddUserToOrganization(int orgId, AddUserToOrgDto dto)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
@@ -39,11 +39,11 @@ namespace VidizmoBackend.Controllers
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to add users to organizations.");
 
-                var result = await _userService.AddUserToOrganizationAsync(userId, orgId);
+                var result = await _userService.AddUserToOrganizationAsync(orgId, dto.Email);
                 if (!result)
                     return StatusCode(500, "Failed to add user to organization.");
 
-                var payload = AuditLogHelper.BuildPayload(routeData: new { userId, orgId });
+                var payload = AuditLogHelper.BuildPayload(new { orgId }, dto.Email);
 
                 var log = new AuditLog
                 {
@@ -67,8 +67,8 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpPost("group/{groupId}")]
-        public async Task<IActionResult> AddUserToGroup(int groupId, [FromBody] List<int> userIds)
+        [HttpPost("group/{groupId}/{userId}")]
+        public async Task<IActionResult> AddUserToGroup(int groupId, int userId)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
@@ -83,11 +83,11 @@ namespace VidizmoBackend.Controllers
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to add users to groups.");
 
-                var result = await _userService.AddUsersToGroupAsync(groupId, userIds, currentUserId);
+                var result = await _userService.AddUserToGroupAsync(groupId, userId, currentUserId);
                 if (!result)
                     return StatusCode(500, "Failed to add user to group.");
 
-                var payload = AuditLogHelper.BuildPayload(new { groupId }, userIds);
+                var payload = AuditLogHelper.BuildPayload(routeData: new { groupId, userId });
 
                 var log = new AuditLog
                 {
@@ -111,8 +111,8 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpDelete("group/{groupId}")]
-        public async Task<IActionResult> RemoveUserFromGroup(int groupId, [FromBody] List<int> userIds)
+        [HttpDelete("group/{groupId}/{userId}")]
+        public async Task<IActionResult> RemoveUserFromGroup(int groupId, int userId)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
@@ -127,11 +127,11 @@ namespace VidizmoBackend.Controllers
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to remove users from groups.");
 
-                var result = await _userService.RemoveUsersFromGroupAsync(groupId, userIds);
+                var result = await _userService.RemoveUserFromGroupAsync(groupId, userId);
                 if (!result)
                     return StatusCode(500, "Failed to remove user from group.");
 
-                var payload = AuditLogHelper.BuildPayload(new { groupId }, userIds);
+                var payload = AuditLogHelper.BuildPayload(routeData: new { groupId, userId });
 
                 var log = new AuditLog
                 {
@@ -194,6 +194,21 @@ namespace VidizmoBackend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred: " + ex.Message);
+            }
+        }
+
+        [HttpGet("group/{groupId}")]
+        public async Task<IActionResult> GetUsersNotInGroup(int groupId)
+        {
+            try
+            {
+                var list = await _userService.GetUsersNotInGroup(groupId);
+
+                return Ok(new {usersNotInGroup = list});
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
             }
         }
     }
