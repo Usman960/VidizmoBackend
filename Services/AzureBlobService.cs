@@ -1,5 +1,7 @@
 using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Http;
+using Azure.Storage.Sas;
+using Azure.Storage.Blobs.Specialized;
 
 namespace VidizmoBackend.Services
 {
@@ -59,6 +61,26 @@ namespace VidizmoBackend.Services
             var blobClient = containerClient.GetBlobClient(blobName);
 
             await blobClient.DeleteIfExistsAsync();
+        }
+
+        public string GenerateUploadSasUrl(string originalFileName, out string blobName)
+        {
+            blobName = Guid.NewGuid() + Path.GetExtension(originalFileName);
+            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+            containerClient.CreateIfNotExists();
+
+            var blobClient = containerClient.GetBlockBlobClient(blobName);
+
+            var sasBuilder = new BlobSasBuilder
+            {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b",
+                ExpiresOn = DateTimeOffset.UtcNow.AddHours(1)
+            };
+            sasBuilder.SetPermissions(BlobSasPermissions.Write | BlobSasPermissions.Create | BlobSasPermissions.Add);
+
+            return blobClient.GenerateSasUri(sasBuilder).ToString();
         }
     }
 }

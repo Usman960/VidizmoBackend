@@ -16,27 +16,21 @@ namespace VidizmoBackend.Services
             _orgRepository = orgRepository;
         }
 
-        public async Task<bool> UploadVideoAsync(IFormFile file, AddVideoReqDto dto, int? userId, int? scopedTokenId, int orgId)
+        public async Task<bool> UploadVideoAsync(int userId, NotifyUploadDto dto)
         {
-            var blobUrl = await _blobService.UploadFileAsync(file);
-            if (string.IsNullOrEmpty(blobUrl))
-            {
-                throw new InvalidOperationException("Failed to upload video to blob storage.");
-            }
-
             var video = new Video
-            {
-                Filename = Path.GetFileNameWithoutExtension(file.FileName),
-                FileSize = file.Length,
-                Title = dto.Title,
-                Description = dto.Description,
-                UploadedByUserId = userId,
-                ScopedTokenId = scopedTokenId,
-                FilePath = blobUrl,
-                OrganizationId = orgId,
-                UploadedAt = DateTime.UtcNow,
-                FileFormat = Path.GetExtension(file.FileName).TrimStart('.')
-            };
+                {
+                    Title = dto.Title,
+                    Description = dto.Description,
+                    FilePath = $"https://blobvideos.blob.core.windows.net/videos/{dto.BlobName}",
+                    FileSize = dto.FileSize,
+                    Filename = Path.GetFileNameWithoutExtension(dto.OriginalFileName),
+                    UploadedAt = DateTime.UtcNow,
+                    UploadedByUserId = userId,
+                    FileFormat = Path.GetExtension(dto.BlobName).TrimStart('.'),
+                    OrganizationId = dto.OrgId
+                };
+
             if (!await _videoRepository.UploadVideoAsync(video))
             {
                 throw new InvalidOperationException("Failed to save video metadata to the database.");
