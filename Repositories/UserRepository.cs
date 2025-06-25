@@ -81,66 +81,17 @@ namespace VidizmoBackend.Repositories
             return await _context.SaveChangesAsync() > 0; // Save changes and return success status
         }
 
-        public async Task<List<UserWithRolesDto>> GetUsersWithRolesAsync(int orgId)
+        public async Task<List<UserResDto>> GetUsersInOrganization(int orgId)
         {
-            var users = await _context.Users
+            return await _context.Users
                 .Where(u => u.OrganizationId == orgId)
+                .Select(u => new UserResDto
+                {
+                    UserId = u.UserId,
+                    Fullname = $"{u.Firstname} {u.Lastname ?? ""}",
+                    Email = u.Email
+                })
                 .ToListAsync();
-
-            var userDtos = new List<UserWithRolesDto>();
-
-            foreach (var user in users)
-            {
-                // Get group IDs for this user
-                var groupIds = await _context.UserGroups
-                    .Where(ug => ug.UserId == user.UserId)
-                    .Select(ug => ug.GroupId)
-                    .ToListAsync();
-
-                // Get direct roles
-                var directRoles = await _context.UserOgGpRoles
-                    .Where(ur =>
-                        ur.OrganizationId == orgId &&
-                        ur.Status == "Active" &&
-                        ur.UserId == user.UserId)
-                    .Include(ur => ur.Role)
-                    .ToListAsync();
-
-                // Get group-based roles
-                var groupRoles = new List<UserOgGpRole>();
-
-                if (groupIds.Any())
-                {
-                    groupRoles = await _context.UserOgGpRoles
-                        .Where(ur =>
-                            ur.OrganizationId == orgId &&
-                            ur.Status == "Active" &&
-                            ur.GroupId != null &&
-                            groupIds.Contains(ur.GroupId.Value))
-                        .Include(ur => ur.Role)
-                        .ToListAsync();
-                }
-
-                userDtos.Add(new UserWithRolesDto
-                {
-                    UserId = user.UserId,
-                    Fullname = $"{user.Firstname} {user.Lastname ?? ""}",
-                    Email = user.Email,
-                    IndividualRoles = directRoles.Select(ur => new RoleAssignments
-                    {
-                        UserOgGpRoleId = ur.UserOgGpRoleId,
-                        RoleName = ur.Role.Name
-                    }).ToList(),
-
-                    GroupRoles = groupRoles.Select(ur => new RoleAssignments
-                    {
-                        UserOgGpRoleId = ur.UserOgGpRoleId,
-                        RoleName = ur.Role.Name
-                    }).ToList()
-                });
-            }
-
-            return userDtos;
         }
 
         public async Task<User?> GetUserByEmail(string email)
@@ -157,9 +108,9 @@ namespace VidizmoBackend.Repositories
                 .Select(ug => ug.UserId)
                 .ToListAsync();
 
-            var orgId = await _context.UserGroups
-                .Where(ug => ug.GroupId == groupId)
-                .Select(ug => ug.User.OrganizationId)
+            var orgId = await _context.Groups
+                .Where(g => g.GroupId == groupId)
+                .Select(g => g.OrganizationId)
                 .FirstOrDefaultAsync();
 
             var usersNotInGroup = await _context.Users

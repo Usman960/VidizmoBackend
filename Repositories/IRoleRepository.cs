@@ -35,5 +35,7 @@ namespace VidizmoBackend.Repositories
         Task<PermissionsDto?> GetUserPermissionsAsync(int userId);
         Task<RolesDto> GetAllRoles(int orgId);
         Task<UserOgGpRole?> GetRoleAssignment(int userOgGpRole);
+        Task<List<IndividualRolesDto>> GetIndividualRoles(int org);
+        Task<List<GroupRolesDto>> GetGroupRoles(int orgId);
     }
 }

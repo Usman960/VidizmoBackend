@@ -37,7 +37,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to create roles.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to create roles." });
                 }
                 var result = await _roleService.CreateRoleAsync(userId, dto);
                 if (!result)
@@ -56,7 +56,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok(new {message = "Role created successfully."});
+                return Ok(new { message = "Role created successfully." });
             }
             catch (Exception ex)
             {
@@ -79,7 +79,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(assignedByUserId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to assign roles.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to assign individual roles." });
                 }
                 var result = await _roleService.AssignRoleToUserAsync(userId, orgId, roleId, assignedByUserId);
                 if (!result)
@@ -97,7 +97,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log); ;
 
-                return Ok("Role assigned successfully.");
+                return Ok(new { message = "Role assigned successfully." });
             }
             catch (Exception ex)
             {
@@ -120,7 +120,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(assignedByUserId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to assign roles to groups.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to assign roles to groups." });
                 }
                 var result = await _roleService.AssignRoleToGroupAsync(groupId, orgId, roleId, assignedByUserId);
                 if (!result)
@@ -138,7 +138,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Role assigned to group successfully.");
+                return Ok(new { message = "Role assigned to group successfully." });
             }
             catch (Exception ex)
             {
@@ -161,7 +161,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to edit roles.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to edit roles." });
                 }
                 var result = await _roleService.EditRoleAsync(userId, roleId, dto);
                 if (!result)
@@ -181,7 +181,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok(new {message = "Role edited successfully."});
+                return Ok(new { message = "Role edited successfully." });
             }
             catch (Exception ex)
             {
@@ -204,7 +204,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to delete roles.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to delete roles." });
                 }
                 var result = await _roleService.DeleteRoleAsync(roleId);
                 if (!result)
@@ -223,7 +223,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Role deleted successfully.");
+                return Ok(new { message = "Role deleted successfully." });
             }
             catch (Exception ex)
             {
@@ -246,7 +246,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to revoke roles.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to revoke roles." });
                 }
                 var result = await _roleService.RevokeRoleAsync(userId, userOgGpRoleId);
                 if (!result)
@@ -264,7 +264,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Role revoked successfully.");
+                return Ok(new { message = "Role revoked successfully." });
             }
             catch (Exception ex)
             {
@@ -287,10 +287,86 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view roles.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view roles." });
                 }
                 var roles = await _roleService.GetAllRoles(orgId);
-                
+
+                var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
+                var log = new AuditLog
+                {
+                    Action = "view",
+                    Entity = "role",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
+                return Ok(roles);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
+
+        [HttpGet("individual/{orgId}")]
+        public async Task<IActionResult> GetIndividualRoles(int orgId)
+        {
+            try
+            {
+                int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                // Check if the user has permission to revoke roles
+                var permissionDto = new PermissionDto
+                {
+                    Action = "view",
+                    Entity = "role"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view roles." });
+                }
+                var roles = await _roleService.GetIndividualRoles(orgId);
+
+                var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
+                var log = new AuditLog
+                {
+                    Action = "view",
+                    Entity = "role",
+                    Timestamp = DateTime.UtcNow,
+                    PerformedById = userId,
+                    Payload = payload
+                };
+                _ = _auditLogService.SendLogAsync(log);
+
+                return Ok(roles);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
+
+        [HttpGet("group/{orgId}")]
+        public async Task<IActionResult> GetGroupRoles(int orgId)
+        {
+            try
+            {
+                int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                // Check if the user has permission to revoke roles
+                var permissionDto = new PermissionDto
+                {
+                    Action = "view",
+                    Entity = "role"
+                };
+                var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
+                if (!hasPermission)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view roles." });
+                }
+                var roles = await _roleService.GetGroupRoles(orgId);
+
                 var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
                 var log = new AuditLog
                 {

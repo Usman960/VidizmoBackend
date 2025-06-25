@@ -37,7 +37,7 @@ namespace VidizmoBackend.Controllers
                 };
                 var hasPermission = await _roleService.UserHasPermissionAsync(currentUserId, permissionDto);
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to add users to organizations.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to add users to organization." });
 
                 var result = await _userService.AddUserToOrganizationAsync(orgId, dto.Email);
                 if (!result)
@@ -55,7 +55,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("User added to organization successfully.");
+                return Ok(new {message = "User added to organization successfully."});
             }
             catch (ArgumentException ex)
             {
@@ -63,7 +63,7 @@ namespace VidizmoBackend.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+                return StatusCode(500, new {message = ex.Message});
             }
         }
 
@@ -81,7 +81,7 @@ namespace VidizmoBackend.Controllers
                 };
                 var hasPermission = await _roleService.UserHasPermissionAsync(currentUserId, permissionDto);
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to add users to groups.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to add users to groups." });
 
                 var result = await _userService.AddUserToGroupAsync(groupId, userId, currentUserId);
                 if (!result)
@@ -99,7 +99,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("User added to group successfully.");
+                return Ok(new {message = "User added to group successfully."});
             }
             catch (ArgumentException ex)
             {
@@ -125,7 +125,7 @@ namespace VidizmoBackend.Controllers
                 };
                 var hasPermission = await _roleService.UserHasPermissionAsync(currentUserId, permissionDto);
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to remove users from groups.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to remove users from groups." });
 
                 var result = await _userService.RemoveUserFromGroupAsync(groupId, userId);
                 if (!result)
@@ -143,7 +143,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("User removed from group successfully.");
+                return Ok(new {message = "User removed from group successfully."});
             }
             catch (ArgumentException ex)
             {
@@ -156,7 +156,7 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpGet("{orgId}")]
-        public async Task<IActionResult> GetUsersWithRoles(int orgId)
+        public async Task<IActionResult> GetUsersInOrganization(int orgId)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
@@ -169,7 +169,7 @@ namespace VidizmoBackend.Controllers
                 };
                 var hasPermission = await _roleService.UserHasPermissionAsync(currentUserId, permissionDto);
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view users.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view users." });
 
                 var users = await _userService.GetUsersWithRolesAsync(orgId);
 

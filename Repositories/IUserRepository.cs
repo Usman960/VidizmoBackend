@@ -16,9 +16,9 @@ namespace VidizmoBackend.Repositories
         Task<List<User>> GetUsersByIdsAsync(List<int> userIds);
         // delete users from a group
         Task<bool> RemoveUserFromGroupAsync(int groupId, int userId);
-        Task<List<UserWithRolesDto>> GetUsersWithRolesAsync(int orgId);
+        Task<List<UserResDto>> GetUsersInOrganization(int orgId);
         Task<User?> GetUserByEmail(string email);
         Task<List<UsersNotInGroupDto>> GetUsersNotInGroup(int groupId);
-        Task<User?> GetUserByGroupId(int groupId, int userId);
+        Task<User?> GetUserByGroupId(int groupId, int userId); 
     }
 }

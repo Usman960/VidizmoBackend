@@ -389,5 +389,76 @@ namespace VidizmoBackend.Repositories
                 .Where(uor => uor.UserOgGpRoleId == userOgGpRoleId)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<List<IndividualRolesDto>> GetIndividualRoles(int orgId)
+        {
+            var roles = await _context.UserOgGpRoles
+                .Where(uor => uor.OrganizationId == orgId &&
+                            uor.GroupId == null &&
+                            uor.UserId != null &&
+                            uor.Status == "Active")
+                .Include(uor => uor.Role)
+                .ToListAsync();
+
+            var individualRoles = roles
+                .GroupBy(r => r.UserId)
+                .Select(g => new IndividualRolesDto
+                {
+                    UserId = g.Key!.Value,
+                    IndividualRoles = g.Select(r => new RoleAssignments
+                    {
+                        UserOgGpRoleId = r.UserOgGpRoleId,
+                        RoleName = r.Role.Name
+                    }).ToList()
+                })
+                .ToList();
+
+            return individualRoles;
+        }
+
+        public async Task<List<GroupRolesDto>> GetGroupRoles(int orgId)
+        {
+            // Step 1: Get all active group-assigned roles in this org
+            var groupAssignedRoles = await _context.UserOgGpRoles
+                .Where(r => r.OrganizationId == orgId &&
+                            r.GroupId != null &&
+                            r.UserId == null &&
+                            r.Status == "Active")
+                .Include(r => r.Role)
+                .ToListAsync();
+
+            // Step 2: Get all UserGroup mappings in this org
+            var userGroupMappings = await _context.UserGroups
+                .Where(ug => ug.Group.OrganizationId == orgId)
+                .Include(ug => ug.Group)
+                .ToListAsync();
+
+            // Step 3: Match users to roles via group membership
+            var userRoles = userGroupMappings
+                .SelectMany(ug =>
+                    groupAssignedRoles
+                        .Where(r => r.GroupId == ug.GroupId)
+                        .Select(r => new
+                        {
+                            ug.UserId,
+                            r.UserOgGpRoleId,
+                            r.Role.Name
+                        })
+                )
+                .GroupBy(x => x.UserId)
+                .Select(g => new GroupRolesDto
+                {
+                    UserId = g.Key,
+                    GroupRoles = g.Select(x => new RoleAssignments
+                    {
+                        UserOgGpRoleId = x.UserOgGpRoleId,
+                        RoleName = x.Name
+                    }).ToList()
+                })
+                .ToList();
+
+            return userRoles;
+        }
+
     }
 }

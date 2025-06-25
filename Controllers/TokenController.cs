@@ -38,7 +38,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to delete roles.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to generate token." });
                 }
                 var token = await _tokenService.GenerateScopedTokenAsync(userId, orgId, dto);
                 var payload = AuditLogHelper.BuildPayload(new { orgId }, dto);
@@ -81,7 +81,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to revoke tokens.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to revoke tokens." });
                 }
                 var result = await _tokenService.RevokeTokenAsync(tokenId);
                 if (!result)
@@ -99,7 +99,7 @@ namespace VidizmoBackend.Controllers
                     Payload = payload
                 };
                 _ = _auditLogService.SendLogAsync(log);
-                return Ok("Token revoked successfully.");
+                return Ok(new {message = "Token revoked successfully."});
             }
             catch (InvalidOperationException ex)
             {
@@ -144,7 +144,7 @@ namespace VidizmoBackend.Controllers
                     Payload = payload
                 };
                 _ = _auditLogService.SendLogAsync(log);
-                return Ok("Token deleted successfully.");
+                return Ok(new {message = "Token deleted successfully."});
             }
             catch (InvalidOperationException ex)
             {

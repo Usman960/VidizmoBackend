@@ -76,13 +76,13 @@ namespace VidizmoBackend.Services
             return await _userRepository.RemoveUserFromGroupAsync(groupId, userId);
         }
 
-        public async Task<List<UserWithRolesDto>> GetUsersWithRolesAsync(int orgId)
+        public async Task<List<UserResDto>> GetUsersWithRolesAsync(int orgId)
         {
             var org = await _orgRepository.GetOrgByIdAsync(orgId);
             if (org == null)
                 throw new ArgumentException("Organization not found.");
 
-            return await _userRepository.GetUsersWithRolesAsync(orgId);
+            return await _userRepository.GetUsersInOrganization(orgId);
         }
 
         public async Task<List<UsersNotInGroupDto>> GetUsersNotInGroup(int groupId)

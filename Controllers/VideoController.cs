@@ -56,7 +56,7 @@ namespace VidizmoBackend.Controllers
                     : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
 
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to upload videos.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to upload videos." });
 
                 var saved = await _videoService.UploadVideoAsync(file, dto, userId, scopedTokenId, orgId);
                 if (!saved)
@@ -104,7 +104,7 @@ namespace VidizmoBackend.Controllers
                     : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
 
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to download videos.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to download videos." });
 
                 var stream = await _videoService.DownloadVideoAsync(videoId);
                 if (stream == null)
@@ -156,7 +156,7 @@ namespace VidizmoBackend.Controllers
                     : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
 
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to play videos.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to play videos." });
 
                 var (stream, contentType, fileName) = await _videoService.StreamVideoAsync(videoId);
 
@@ -245,7 +245,7 @@ namespace VidizmoBackend.Controllers
                     : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
 
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view metadata.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view metadata." });
 
                 var metadata = await _videoService.GetMetadataByIdAsync(videoId);
 
@@ -278,26 +278,6 @@ namespace VidizmoBackend.Controllers
         {
             try
             {
-                int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
-                    ? int.Parse(User.FindFirstValue("ScopedTokenId")!)
-                    : null;
-
-                int? userId = scopedTokenId == null
-                    ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
-                    : null;
-
-                var permissionDto = new PermissionDto
-                {
-                    Action = "view",
-                    Entity = "metadata"
-                };
-                bool hasPermission = scopedTokenId.HasValue
-                    ? await _tokenService.TokenHasPermissionAsync(scopedTokenId.Value, permissionDto)
-                    : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
-
-                if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view videos.");
-
                 var videoList = await _videoService.GetAllVideos(orgId);
 
                 if (videoList == null || videoList.Count() == 0) return StatusCode(404, new { error = "No videos found in this tenant" });
@@ -332,7 +312,7 @@ namespace VidizmoBackend.Controllers
                     : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
 
                 if (!hasPermission)
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to edit metadata.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to edit metadata." });
 
                 var updated = await _videoService.EditVideoMetadataAsync(metadataReqDto, videoId);
                 

@@ -40,7 +40,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to create groups.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to create groups." });
                 }
                 var result = await _groupService.CreateGroupAsync(orgId, userId, dto.GroupName);
                 if (!result)
@@ -59,7 +59,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Group created successfully.");
+                return Ok(new {message = "Group created successfully."});
             }
             catch (Exception ex)
             {
@@ -83,7 +83,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to delete groups.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to delete groups." });
                 }
 
                 await _roleService.DeleteAssignmentsByGroupId(groupId);
@@ -104,7 +104,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok("Group deleted successfully.");
+                return Ok(new {message = "Group deleted successfully."});
             }
             catch (Exception ex)
             {
@@ -127,7 +127,7 @@ namespace VidizmoBackend.Controllers
                 var hasPermission = await _roleService.UserHasPermissionAsync(userId, permissionDto);
                 if (!hasPermission)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to view groups.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view groups." });
                 }
 
                 var list = await _groupService.GetGroupLists(orgId);

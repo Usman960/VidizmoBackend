@@ -153,5 +153,21 @@ namespace VidizmoBackend.Services
 
             return await _roleRepo.GetAllRoles(orgId);
         }
+
+        public async Task<List<IndividualRolesDto>> GetIndividualRoles(int orgId)
+        {
+            var org = await _orgRepo.GetOrgByIdAsync(orgId);
+            if (org == null) throw new ArgumentException("Organization not found");
+
+            return await _roleRepo.GetIndividualRoles(orgId);
+        }
+
+        public async Task<List<GroupRolesDto>> GetGroupRoles(int orgId)
+        {
+            var org = await _orgRepo.GetOrgByIdAsync(orgId);
+            if (org == null) throw new ArgumentException("Organization not found");
+
+            return await _roleRepo.GetGroupRoles(orgId);
+        }
     }
 }
