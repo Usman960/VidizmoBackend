@@ -85,63 +85,6 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-
-        // [HttpPost("upload/{orgId}")]
-        // public async Task<IActionResult> UploadVideo([FromForm] IFormFile file, [FromForm] AddVideoReqDto dto, int orgId)
-        // {
-        //     if (file == null || file.Length == 0)
-        //         return BadRequest("File is required.");
-
-        //     if (dto == null)
-        //         return BadRequest("Video details are required.");
-
-        //     try
-        //     {
-        //         int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
-        //             ? int.Parse(User.FindFirstValue("ScopedTokenId")!)
-        //             : null;
-
-        //         int? userId = scopedTokenId == null
-        //             ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
-        //             : null;
-
-        //         // check if the user is authorized to upload videos
-        //         var permissionDto = new PermissionDto
-        //         {
-        //             Action = "upload",
-        //             Entity = "video"
-        //         };
-
-        //         bool hasPermission = scopedTokenId.HasValue
-        //             ? await _tokenService.TokenHasPermissionAsync(scopedTokenId.Value, permissionDto)
-        //             : await _roleService.UserHasPermissionAsync(userId!.Value, permissionDto);
-
-        //         if (!hasPermission)
-        //             return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to upload videos." });
-
-        //         var saved = await _videoService.UploadVideoAsync(file, dto, userId, scopedTokenId, orgId);
-        //         if (!saved)
-        //             return StatusCode(500, "Failed to upload video.");
-
-        //         var payload = AuditLogHelper.BuildPayload(new { orgId }, dto);
-        //         var log = new AuditLog
-        //         {
-        //             Action = "upload",
-        //             Entity = "video",
-        //             Timestamp = DateTime.UtcNow,
-        //             PerformedById = userId,
-        //             TokenId = scopedTokenId,
-        //             Payload = payload
-        //         };
-        //         _ = _auditLogService.SendLogAsync(log);
-        //         return Ok(new {message = "Video uploaded successfully." });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, "An unexpected error occurred: " + ex.Message);
-        //     }
-        // }
-
         [HttpGet("download/{videoId}")]
         public async Task<IActionResult> DownloadVideo(int videoId)
         {  
@@ -339,6 +282,14 @@ namespace VidizmoBackend.Controllers
         {
             try
             {
+                int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
+                    ? int.Parse(User.FindFirstValue("ScopedTokenId")!)
+                    : null;
+
+                int? userId = scopedTokenId == null
+                    ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
+                    : null;
+
                 var videoList = await _videoService.GetAllVideos(orgId);
 
                 if (videoList == null || videoList.Count() == 0) return StatusCode(404, new { error = "No videos found in this tenant" });

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VidizmoBackend.DTOs;
 using VidizmoBackend.Services;
@@ -15,6 +16,7 @@ namespace VidizmoBackend.Controllers
             _authService = authService;
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto dto)
         {
@@ -31,6 +33,7 @@ namespace VidizmoBackend.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("signUp")]
         public async Task<IActionResult> SignUp(SignUpRequestDto dto)
         {

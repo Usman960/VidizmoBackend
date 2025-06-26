@@ -19,13 +19,30 @@ public class TokenMiddleware
 
     public async Task InvokeAsync(HttpContext context, ApplicationDbContext dbContext)
     {
+        // Allow requests to endpoints that allow anonymous access
+        var endpoint = context.GetEndpoint();
+        var allowAnonymous = endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.IAllowAnonymous>() != null;
+
+        if (allowAnonymous)
+        {
+            await _next(context); // Let it pass
+            return;
+        }
+
         var headers = context.Request.Headers;
 
         string authHeader = headers["Authorization"];
 
-        // If no Authorization header or it’s a Bearer JWT, skip this middleware
-        if (string.IsNullOrEmpty(authHeader) || authHeader.StartsWith("Bearer "))
+        if (string.IsNullOrEmpty(authHeader))
         {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsync("Authorization header is missing.");
+            return;
+        }
+
+        if (authHeader.StartsWith("Bearer "))
+        {
+            // Let JWT middleware handle this
             await _next(context);
             return;
         }
@@ -52,7 +69,8 @@ public class TokenMiddleware
         // Step 3: Create claims identity based on scoped token
         var claims = new List<Claim>
         {
-            new Claim("ScopedTokenId", scopedToken.ScopedTokenId.ToString())
+            new Claim("ScopedTokenId", scopedToken.ScopedTokenId.ToString()),
+            new Claim("OrganizationId", scopedToken.OrganizationId.ToString())
         };
 
         var identity = new ClaimsIdentity(claims, "ScopedToken");
