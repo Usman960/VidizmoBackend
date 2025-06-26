@@ -12,9 +12,9 @@ namespace VidizmoBackend.Controllers {
     [Authorize]
     public class OrganizationController : ControllerBase
     {
-        private readonly OrganizationService _organizationService;
+        private readonly IOrganizationService _organizationService;
         private readonly AuditLogService _auditLogService;
-        public OrganizationController(OrganizationService organizationService, AuditLogService auditLogService)
+        public OrganizationController(IOrganizationService organizationService, AuditLogService auditLogService)
         {
             _organizationService = organizationService;
             _auditLogService = auditLogService;

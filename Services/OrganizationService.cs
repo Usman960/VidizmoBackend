@@ -4,7 +4,7 @@ using VidizmoBackend.Repositories;
 
 namespace VidizmoBackend.Services
 {
-    public class OrganizationService
+    public class OrganizationService: IOrganizationService
     {
         private readonly IOrgRepository _organizationRepo;
         private readonly IRoleRepository _roleRepo;

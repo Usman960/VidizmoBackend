@@ -30,7 +30,7 @@ namespace VidizmoBackend.Repositories
                 CreatedByUserId = createdByUserId,
                 OrganizationId = orgId,
                 TokenHash = hashed,
-                ScopeJson = scopeJson
+                Permissions = scopeJson
             };
 
             _context.ScopedTokens.Add(token);
@@ -79,7 +79,7 @@ namespace VidizmoBackend.Repositories
                 .Select(t => new TokenViewDto
                 {
                     TokenId = t.ScopedTokenId,
-                    ScopeJson = t.ScopeJson,
+                    Permissions = t.Permissions,
                     ExpiresAt = t.ExpiresAt,
                     IsRevoked = t.IsRevoked
                 })

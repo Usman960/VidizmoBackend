@@ -18,19 +18,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register services and repositories
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<OrganizationService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 builder.Services.AddScoped<IOrgRepository, OrgRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
-builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<GroupService>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<AzureBlobService>();
-builder.Services.AddScoped<VideoService>();
-builder.Services.AddScoped<RoleService>();
+builder.Services.AddScoped<IVideoService, VideoService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddSingleton<JwtTokenGenerator>(); // Assuming stateless JWT helper
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IVideoRepository, VideoRepository>();

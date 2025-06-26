@@ -5,7 +5,7 @@ using VidizmoBackend.Repositories;
 
 namespace VidizmoBackend.Services
 {
-    public class UserService
+    public class UserService: IUserService
     {
         private readonly IUserRepository _userRepository;
         private readonly IOrgRepository _orgRepository;
@@ -76,7 +76,7 @@ namespace VidizmoBackend.Services
             return await _userRepository.RemoveUserFromGroupAsync(groupId, userId);
         }
 
-        public async Task<List<UserResDto>> GetUsersWithRolesAsync(int orgId)
+        public async Task<List<UserResDto>> GetUsersInOrganization(int orgId)
         {
             var org = await _orgRepository.GetOrgByIdAsync(orgId);
             if (org == null)

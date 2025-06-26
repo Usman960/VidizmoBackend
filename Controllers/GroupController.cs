@@ -13,11 +13,11 @@ namespace VidizmoBackend.Controllers
     [Authorize]
     public class GroupController : ControllerBase
     {
-        private readonly GroupService _groupService;
-        private readonly RoleService _roleService;
+        private readonly IGroupService _groupService;
+        private readonly IRoleService _roleService;
         private readonly AuditLogService _auditLogService;
 
-        public GroupController(GroupService groupService, RoleService roleService, AuditLogService auditLogService)
+        public GroupController(IGroupService groupService, IRoleService roleService, AuditLogService auditLogService)
         {
             _groupService = groupService;
             _roleService = roleService;

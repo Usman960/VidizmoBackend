@@ -3,7 +3,7 @@ using VidizmoBackend.Models;
 using VidizmoBackend.DTOs;
 
 namespace VidizmoBackend.Services {
-    public class GroupService
+    public class GroupService: IGroupService
     {
         private readonly IGroupRepository _groupRepository;
         private readonly IOrgRepository _orgRepository;

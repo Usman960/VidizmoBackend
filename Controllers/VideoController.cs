@@ -13,12 +13,12 @@ namespace VidizmoBackend.Controllers
     [Route("api/video")]
     public class VideoController : ControllerBase
     {
-        private readonly VideoService _videoService;
-        private readonly RoleService _roleService;
-        private readonly TokenService _tokenService;
+        private readonly IVideoService _videoService;
+        private readonly IRoleService _roleService;
+        private readonly ITokenService _tokenService;
         private readonly AuditLogService _auditLogService;
         private readonly AzureBlobService _azureBlobService;
-        public VideoController(VideoService videoService, RoleService roleService, TokenService tokenService, AuditLogService auditLogService, AzureBlobService azureBlobService)
+        public VideoController(IVideoService videoService, IRoleService roleService, ITokenService tokenService, AuditLogService auditLogService, AzureBlobService azureBlobService)
         {
             _videoService = videoService;
             _roleService = roleService;

@@ -13,10 +13,10 @@ namespace VidizmoBackend.Controllers
     [Authorize]
     public class TokencController : ControllerBase
     {
-        private readonly TokenService _tokenService;
-        private readonly RoleService _roleService;
+        private readonly ITokenService _tokenService;
+        private readonly IRoleService _roleService;
         private readonly AuditLogService _auditLogService;
-        public TokencController(TokenService tokenService, RoleService roleService, AuditLogService auditLogService)
+        public TokencController(ITokenService tokenService, IRoleService roleService, AuditLogService auditLogService)
         {
             _tokenService = tokenService;
             _roleService = roleService;

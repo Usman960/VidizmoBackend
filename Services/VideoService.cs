@@ -4,7 +4,7 @@ using VidizmoBackend.Repositories;
 
 namespace VidizmoBackend.Services
 {
-    public class VideoService
+    public class VideoService: IVideoService
     {
         private readonly IVideoRepository _videoRepository;
         private readonly AzureBlobService _blobService;

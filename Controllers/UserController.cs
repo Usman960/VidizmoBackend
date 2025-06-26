@@ -13,10 +13,10 @@ namespace VidizmoBackend.Controllers
     [Authorize]
     public class UserController : ControllerBase
     {
-        private readonly UserService _userService;
-        private readonly RoleService _roleService;
+        private readonly IUserService _userService;
+        private readonly IRoleService _roleService;
         private readonly AuditLogService _auditLogService;
-        public UserController(UserService userService, RoleService roleService, AuditLogService auditLogService)
+        public UserController(IUserService userService, IRoleService roleService, AuditLogService auditLogService)
         {
             _userService = userService;
             _roleService = roleService;
@@ -171,7 +171,7 @@ namespace VidizmoBackend.Controllers
                 if (!hasPermission)
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view users." });
 
-                var users = await _userService.GetUsersWithRolesAsync(orgId);
+                var users = await _userService.GetUsersInOrganization(orgId);
 
                 var payload = AuditLogHelper.BuildPayload(new { orgId });
 

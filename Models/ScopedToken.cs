@@ -12,7 +12,7 @@ namespace VidizmoBackend.Models
         public string TokenHash { get; set; }
 
         // List of granted permissions like ["video:upload", "video:download"]
-        public string ScopeJson { get; set; }  // Stored as serialized JSON array
+        public string Permissions { get; set; }  // Stored as serialized JSON array
 
         public DateTime CreatedAt { get; set; }
         public DateTime ExpiresAt { get; set; }

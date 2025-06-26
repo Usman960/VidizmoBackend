@@ -14,9 +14,9 @@ namespace VidizmoBackend.Controllers
     [Authorize]
     public class RoleController : ControllerBase
     {
-        private readonly RoleService _roleService;
+        private readonly IRoleService _roleService;
         private readonly AuditLogService _auditLogService;
-        public RoleController(RoleService roleService, AuditLogService auditLogService)
+        public RoleController(IRoleService roleService, AuditLogService auditLogService)
         {
             _roleService = roleService;
             _auditLogService = auditLogService;

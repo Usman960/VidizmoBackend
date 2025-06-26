@@ -5,7 +5,7 @@ using VidizmoBackend.Repositories;
 
 namespace VidizmoBackend.Services
 {
-    public class TokenService
+    public class TokenService:ITokenService
     {
         private readonly ITokenRepository _tokenRepo;
         private readonly IRoleRepository _roleRepo;
@@ -69,7 +69,7 @@ namespace VidizmoBackend.Services
             var token = await _tokenRepo.GetTokenByIdAsync(tokenId);
             if (token == null || token.IsRevoked || token.ExpiresAt < DateTime.UtcNow) return false;
 
-            var scopes = JsonSerializer.Deserialize<PermissionsDto>(token.ScopeJson);
+            var scopes = JsonSerializer.Deserialize<PermissionsDto>(token.Permissions);
             return _tokenRepo.TokenHasPermissionAsync(scopes, permissionDto);
         }
 

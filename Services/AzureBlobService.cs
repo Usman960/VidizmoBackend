@@ -16,19 +16,19 @@ namespace VidizmoBackend.Services
             _blobServiceClient = new BlobServiceClient(connectionString);
         }
 
-        public async Task<string> UploadFileAsync(IFormFile file)
-        {
-            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            await containerClient.CreateIfNotExistsAsync();
-            var blobClient = containerClient.GetBlobClient(Guid.NewGuid() + Path.GetExtension(file.FileName));
+        // public async Task<string> UploadFileAsync(IFormFile file)
+        // {
+        //     var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+        //     await containerClient.CreateIfNotExistsAsync();
+        //     var blobClient = containerClient.GetBlobClient(Guid.NewGuid() + Path.GetExtension(file.FileName));
 
-            using (var stream = file.OpenReadStream())
-            {
-                await blobClient.UploadAsync(stream, true);
-            }
+        //     using (var stream = file.OpenReadStream())
+        //     {
+        //         await blobClient.UploadAsync(stream, true);
+        //     }
 
-            return blobClient.Uri.ToString();
-        }
+        //     return blobClient.Uri.ToString();
+        // }
 
         public async Task<Stream> DownloadFileAsync(string blobName)
         {

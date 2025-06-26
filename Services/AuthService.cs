@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace VidizmoBackend.Services
 {
-    public class AuthService
+    public class AuthService: IAuthService
     {
         private readonly IUserRepository _userRepo;
         private readonly JwtTokenGenerator _tokenGenerator;
