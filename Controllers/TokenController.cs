@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using VidizmoBackend.Helpers;
 using VidizmoBackend.Models;
+using VidizmoBackend.Filters;
 
 namespace VidizmoBackend.Controllers
 {
@@ -23,12 +24,13 @@ namespace VidizmoBackend.Controllers
             _auditLogService = auditLogService;
         }
 
-        [HttpPost("generate/{orgId}")]
-        public async Task<IActionResult> GenerateScopedToken(int orgId, TokenDto dto)
+        [HttpPost("generate")]
+        public async Task<IActionResult> GenerateScopedToken(TokenDto dto)
         {
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the user has permission to delete roles
                 var permissionDto = new PermissionDto
                 {
@@ -67,6 +69,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpPost("revoke/{tokenId}")]
+        [EnforceTenant(
+            new [] {"tokenId"},
+            new [] {typeof(ScopedToken)}
+        )]
         public async Task<IActionResult> RevokeToken(int tokenId)
         {
             try
@@ -99,7 +105,7 @@ namespace VidizmoBackend.Controllers
                     Payload = payload
                 };
                 _ = _auditLogService.SendLogAsync(log);
-                return Ok(new {message = "Token revoked successfully."});
+                return Ok(new { message = "Token revoked successfully." });
             }
             catch (InvalidOperationException ex)
             {
@@ -112,6 +118,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpDelete("{tokenId}")]
+        [EnforceTenant(
+            new [] {"tokenId"},
+            new [] {typeof(ScopedToken)}
+        )]
         public async Task<IActionResult> DeleteToken(int tokenId)
         {
             try
@@ -144,7 +154,7 @@ namespace VidizmoBackend.Controllers
                     Payload = payload
                 };
                 _ = _auditLogService.SendLogAsync(log);
-                return Ok(new {message = "Token deleted successfully."});
+                return Ok(new { message = "Token deleted successfully." });
             }
             catch (InvalidOperationException ex)
             {

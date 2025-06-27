@@ -14,10 +14,12 @@ namespace VidizmoBackend.Controllers {
     {
         private readonly IOrganizationService _organizationService;
         private readonly AuditLogService _auditLogService;
-        public OrganizationController(IOrganizationService organizationService, AuditLogService auditLogService)
+        private readonly JwtTokenGenerator _tokenGenerator;
+        public OrganizationController(IOrganizationService organizationService, AuditLogService auditLogService, JwtTokenGenerator tokenGenerator)
         {
             _organizationService = organizationService;
             _auditLogService = auditLogService;
+            _tokenGenerator = tokenGenerator;
         }
 
         [HttpPost]
@@ -26,11 +28,10 @@ namespace VidizmoBackend.Controllers {
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-                var result = await _organizationService.CreateOrganizationAsync(userId, dto);
-                if (!result)
-                {
-                    return StatusCode(500, "An error occurred while creating the organization.");
-                }
+                var updatedUser = await _organizationService.CreateOrganizationAsync(userId, dto);
+
+                var (token, _) = _tokenGenerator.GenerateToken(updatedUser);
+
                 var payload = AuditLogHelper.BuildPayload(bodyData: dto);
 
                 var log = new AuditLog
@@ -43,7 +44,7 @@ namespace VidizmoBackend.Controllers {
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok(new { message = "Organization created successfully." });
+                return Ok(new { message = "Organization created successfully.", Token = token });
             }
             catch (Exception ex)
             {
@@ -51,11 +52,12 @@ namespace VidizmoBackend.Controllers {
             }
         }
 
-        [HttpGet("{orgId}")]
-        public async Task<IActionResult> GetOrganizationById(int orgId)
+        [HttpGet]
+        public async Task<IActionResult> GetOrganizationById()
         {
             try
             {
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 var name = await _organizationService.GetOrgNameById(orgId);
                 return Ok(new { Name = name });
             }

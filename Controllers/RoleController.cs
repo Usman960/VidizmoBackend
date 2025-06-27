@@ -6,6 +6,7 @@ using System.Security.Claims;
 using VidizmoBackend.Models;
 using System.Text.Json;
 using VidizmoBackend.Helpers;
+using VidizmoBackend.Filters;
 
 namespace VidizmoBackend.Controllers
 {
@@ -28,6 +29,7 @@ namespace VidizmoBackend.Controllers
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the user has permission to create roles
                 var permissionDto = new PermissionDto
                 {
@@ -39,7 +41,7 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to create roles." });
                 }
-                var result = await _roleService.CreateRoleAsync(userId, dto);
+                var result = await _roleService.CreateRoleAsync(orgId, userId, dto);
                 if (!result)
                 {
                     return StatusCode(500, "An error occurred while creating the role.");
@@ -64,12 +66,17 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpPost("assign-user/{userId}/{orgId}/{roleId}")]
-        public async Task<IActionResult> AssignRoleToUser(int userId, int orgId, int roleId)
+        [HttpPost("assign-user/{userId}/{roleId}")]
+        [EnforceTenant(
+            new [] {"userId", "roleId"},
+            new [] {typeof(User), typeof(Role)}
+        )]
+        public async Task<IActionResult> AssignRoleToUser(int userId, int roleId)
         {
             try
             {
                 int assignedByUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the user has permission to assign roles
                 var permissionDto = new PermissionDto
                 {
@@ -105,12 +112,17 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpPost("assign-group/{groupId}/{orgId}/{roleId}")]
-        public async Task<IActionResult> AssignRoleToGroup(int groupId, int orgId, int roleId)
+        [HttpPost("assign-group/{groupId}/{roleId}")]
+        [EnforceTenant(
+            new [] {"groupId", "roleId"},
+            new [] {typeof(Group), typeof(Role)}
+        )]
+        public async Task<IActionResult> AssignRoleToGroup(int groupId, int roleId)
         {
             try
             {
                 int assignedByUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the user has permission to assign roles to groups
                 var permissionDto = new PermissionDto
                 {
@@ -147,6 +159,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpPut("{roleId}")]
+        [EnforceTenant(
+            new [] {"roleId"},
+            new [] {typeof(Role)}
+        )]
         public async Task<IActionResult> EditRole(int roleId, RoleDto dto)
         {
             try
@@ -163,7 +179,7 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to edit roles." });
                 }
-                var result = await _roleService.EditRoleAsync(userId, roleId, dto);
+                var result = await _roleService.EditRoleAsync(roleId, dto);
                 if (!result)
                 {
                     return StatusCode(500, "An error occurred while editing the role.");
@@ -190,6 +206,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpDelete("{roleId}")]
+        [EnforceTenant(
+            new [] {"roleId"},
+            new [] {typeof(Role)}
+        )]
         public async Task<IActionResult> DeleteRole(int roleId)
         {
             try
@@ -232,6 +252,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpPost("revoke/{userOgGpRoleId}")]
+        [EnforceTenant(
+            new [] {"userOgGpRoleId"},
+            new [] {typeof(UserOgGpRole)}
+        )]
         public async Task<IActionResult> RevokeRole(int userOgGpRoleId)
         {
             try
@@ -272,12 +296,13 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpGet("{orgId}")]
-        public async Task<IActionResult> GetAllRoles(int orgId)
+        [HttpGet]
+        public async Task<IActionResult> GetAllRoles()
         {
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the user has permission to revoke roles
                 var permissionDto = new PermissionDto
                 {
@@ -310,12 +335,13 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpGet("individual/{orgId}")]
-        public async Task<IActionResult> GetIndividualRoles(int orgId)
+        [HttpGet("individual")]
+        public async Task<IActionResult> GetIndividualRoles()
         {
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the user has permission to revoke roles
                 var permissionDto = new PermissionDto
                 {
@@ -348,12 +374,13 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpGet("group/{orgId}")]
-        public async Task<IActionResult> GetGroupRoles(int orgId)
+        [HttpGet("group")]
+        public async Task<IActionResult> GetGroupRoles()
         {
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the user has permission to revoke roles
                 var permissionDto = new PermissionDto
                 {

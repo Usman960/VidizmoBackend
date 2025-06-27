@@ -16,7 +16,7 @@ namespace VidizmoBackend.Services
             _orgRepository = orgRepository;
         }
 
-        public async Task<bool> UploadVideoAsync(int userId, NotifyUploadDto dto)
+        public async Task<bool> UploadVideoAsync(int userId, int orgId, NotifyUploadDto dto)
         {
             var video = new Video
                 {
@@ -28,7 +28,7 @@ namespace VidizmoBackend.Services
                     UploadedAt = DateTime.UtcNow,
                     UploadedByUserId = userId,
                     FileFormat = Path.GetExtension(dto.BlobName).TrimStart('.'),
-                    OrganizationId = dto.OrgId
+                    OrganizationId = orgId
                 };
 
             if (!await _videoRepository.UploadVideoAsync(video))

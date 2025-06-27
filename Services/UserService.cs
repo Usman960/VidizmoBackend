@@ -44,15 +44,7 @@ namespace VidizmoBackend.Services
                 throw new ArgumentException("Invalid group or user IDs.");
             }
 
-            var group = await _groupRepository.GetGroupByIdAsync(groupId);
-            if (group == null)
-                throw new ArgumentException("Group not found.");
-
-            var user = await _userRepository.GetUserByIdAsync(userId);
-            if (user == null)
-                throw new ArgumentException("User not found.");
-
-            user = await _userRepository.GetUserByGroupId(groupId, userId);
+            var user = await _userRepository.GetUserByGroupId(groupId, userId);
             if (user != null) throw new ArgumentException("User is already part of group");
 
             return await _userRepository.AddUserToGroupAsync(groupId, userId, currentUserId);
@@ -64,14 +56,6 @@ namespace VidizmoBackend.Services
             {
                 throw new ArgumentException("Invalid group or user ID.");
             }
-
-            var group = await _groupRepository.GetGroupByIdAsync(groupId);
-            if (group == null)
-                throw new ArgumentException("Group not found.");
-
-            var user = await _userRepository.GetUserByIdAsync(userId);
-            if (user == null)
-                throw new ArgumentException("User not found.");
 
             return await _userRepository.RemoveUserFromGroupAsync(groupId, userId);
         }

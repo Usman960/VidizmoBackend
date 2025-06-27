@@ -1,10 +1,11 @@
 using VidizmoBackend.DTOs;
+using VidizmoBackend.Models;
 
 namespace VidizmoBackend.Services
 {
     public interface IOrganizationService
     {
-        Task<bool> CreateOrganizationAsync(int userId, CreateOrgReqDto dto);
+        Task<User> CreateOrganizationAsync(int userId, CreateOrgReqDto dto);
         Task<string?> GetOrgNameById(int orgId);
     }
 }

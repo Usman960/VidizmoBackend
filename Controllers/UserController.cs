@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using VidizmoBackend.Helpers;
 using VidizmoBackend.Models;
+using VidizmoBackend.Filters;
 
 namespace VidizmoBackend.Controllers
 {
@@ -23,10 +24,11 @@ namespace VidizmoBackend.Controllers
             _auditLogService = auditLogService;
         }
 
-        [HttpPost("org/{orgId}")]
-        public async Task<IActionResult> AddUserToOrganization(int orgId, AddUserToOrgDto dto)
+        [HttpPost("org")]
+        public async Task<IActionResult> AddUserToOrganization(AddUserToOrgDto dto)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
             try
             {
                 // Check if the current user has permission to add users to organizations
@@ -55,7 +57,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok(new {message = "User added to organization successfully."});
+                return Ok(new { message = "User added to organization successfully." });
             }
             catch (ArgumentException ex)
             {
@@ -63,11 +65,15 @@ namespace VidizmoBackend.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new {message = ex.Message});
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
         [HttpPost("group/{groupId}/{userId}")]
+        [EnforceTenant(
+            new [] {"groupId", "userId"},
+            new [] {typeof(Group), typeof(User)}
+        )]
         public async Task<IActionResult> AddUserToGroup(int groupId, int userId)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -99,7 +105,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok(new {message = "User added to group successfully."});
+                return Ok(new { message = "User added to group successfully." });
             }
             catch (ArgumentException ex)
             {
@@ -112,6 +118,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpDelete("group/{groupId}/{userId}")]
+        [EnforceTenant(
+            new [] {"groupId", "userId"},
+            new [] {typeof(Group), typeof(User)}
+        )]
         public async Task<IActionResult> RemoveUserFromGroup(int groupId, int userId)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -143,7 +153,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok(new {message = "User removed from group successfully."});
+                return Ok(new { message = "User removed from group successfully." });
             }
             catch (ArgumentException ex)
             {
@@ -155,12 +165,13 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpGet("{orgId}")]
-        public async Task<IActionResult> GetUsersInOrganization(int orgId)
+        [HttpGet]
+        public async Task<IActionResult> GetUsersInOrganization()
         {
-            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
+                int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the current user has permission to remove users from groups
                 var permissionDto = new PermissionDto
                 {
@@ -198,13 +209,17 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpGet("group/{groupId}")]
+        [EnforceTenant(
+            new [] {"groupId"},
+            new [] {typeof(Group)}
+        )]
         public async Task<IActionResult> GetUsersNotInGroup(int groupId)
         {
             try
             {
                 var list = await _userService.GetUsersNotInGroup(groupId);
 
-                return Ok(new {usersNotInGroup = list});
+                return Ok(new { usersNotInGroup = list });
             }
             catch (Exception ex)
             {

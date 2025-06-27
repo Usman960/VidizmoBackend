@@ -4,7 +4,7 @@ namespace VidizmoBackend.Services
 {
     public interface IVideoService
     {
-        Task<bool> UploadVideoAsync(int userId, NotifyUploadDto dto);
+        Task<bool> UploadVideoAsync(int userId, int orgId, NotifyUploadDto dto);
         Task<Stream> DownloadVideoAsync(int videoId);
         Task<(Stream stream, string contentType, string fileName)> StreamVideoAsync(int videoId);
         Task<bool> DeleteVideoAsync(int videoId);

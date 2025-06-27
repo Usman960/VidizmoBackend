@@ -24,11 +24,7 @@ namespace VidizmoBackend.Services
             {
                 throw new ArgumentException("Invalid user, organization, or role ID.");
             }
-            var role = await _roleRepo.RoleExistsInOrganizationAsync(organizationId, roleId);
-            if (role == null)
-            {
-                throw new ArgumentException("Role does not exist in the specified organization.");
-            }
+    
             var userOgGpRole = new UserOgGpRole
             {
                 UserId = userId,
@@ -41,16 +37,15 @@ namespace VidizmoBackend.Services
             return await _roleRepo.AssignRoleAsync(userOgGpRole);
         }
 
-        public async Task<bool> CreateRoleAsync(int userId, RoleDto dto)
+        public async Task<bool> CreateRoleAsync(int orgId, int userId, RoleDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Description) || dto.Permissions == null)
             {
                 throw new ArgumentException("Invalid role data.");
             }
 
-            var org = await _userRepo.GetOrganizationByUserIdAsync(userId);
 
-            if (await _roleRepo.RoleWithPermissionsExistsAsync(org.OrganizationId, dto.Permissions)) throw new InvalidOperationException("Role with the same permissions already exists.");
+            if (await _roleRepo.RoleWithPermissionsExistsAsync(orgId, dto.Permissions)) throw new InvalidOperationException("Role with the same permissions already exists.");
 
             var role = new Role
             {
@@ -78,11 +73,7 @@ namespace VidizmoBackend.Services
             {
                 throw new ArgumentException("Invalid group, organization, or role ID.");
             }
-            var role = await _roleRepo.RoleExistsInOrganizationAsync(organizationId, roleId);
-            if (role == null)
-            {
-                throw new ArgumentException("Role does not exist in the specified organization.");
-            }
+          
             var userOgGpRole = new UserOgGpRole
             {
                 GroupId = groupId,
@@ -95,24 +86,16 @@ namespace VidizmoBackend.Services
             return await _roleRepo.AssignRoleAsync(userOgGpRole);
         }
 
-        public async Task<bool> EditRoleAsync(int userId, int roleId, RoleDto dto)
+        public async Task<bool> EditRoleAsync(int roleId, RoleDto dto)
         {
             if (roleId <= 0 || dto == null || string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Description) || dto.Permissions == null)
             {
                 throw new ArgumentException("Invalid role data.");
             }
 
-            var org = await _userRepo.GetOrganizationByUserIdAsync(userId);
+            if (await _roleRepo.IsRoleAssignedToAdminAsync(roleId)) throw new InvalidOperationException("Cannot edit a role that is assigned to an admin.");
 
-            var existingRole = await _roleRepo.RoleExistsInOrganizationAsync(org.OrganizationId, roleId);
-            if (existingRole == null)
-            {
-                throw new InvalidOperationException("Role not found.");
-            }
-
-            if (await _roleRepo.IsRoleAssignedToAdminAsync(existingRole.RoleId)) throw new InvalidOperationException("Cannot edit a role that is assigned to an admin.");
-
-            return await _roleRepo.EditRoleAsync(existingRole.RoleId, dto);
+            return await _roleRepo.EditRoleAsync(roleId, dto);
         }
 
         public async Task<bool> RevokeRoleAsync(int userId, int userOgGpRoleId)

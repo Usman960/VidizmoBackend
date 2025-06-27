@@ -6,6 +6,7 @@ using System.Security.Claims;
 using VidizmoBackend.Models;
 using System.Text.Json;
 using VidizmoBackend.Helpers;
+using VidizmoBackend.Filters;
 
 namespace VidizmoBackend.Controllers
 {
@@ -71,8 +72,9 @@ namespace VidizmoBackend.Controllers
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
 
-                var saved = await _videoService.UploadVideoAsync(userId, dto);
+                var saved = await _videoService.UploadVideoAsync(userId, orgId, dto);
                 if (!saved)
                     return StatusCode(500, "Failed to save video metadata.");
 
@@ -86,8 +88,12 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpGet("download/{videoId}")]
+        [EnforceTenant(
+            new [] {"videoId"},
+            new [] {typeof(Video)}
+        )]
         public async Task<IActionResult> DownloadVideo(int videoId)
-        {  
+        {
             try
             {
                 int? scopedTokenId = User.HasClaim(c => c.Type == "ScopedTokenId")
@@ -138,6 +144,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpGet("play/{videoId}")]
+        [EnforceTenant(
+            new [] {"videoId"},
+            new [] {typeof(Video)}
+        )]
         public async Task<IActionResult> PlayVideo(int videoId)
         {
             try
@@ -189,6 +199,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpDelete("delete/{videoId}")]
+        [EnforceTenant(
+            new [] {"videoId"},
+            new [] {typeof(Video)}
+        )]
         public async Task<IActionResult> DeleteVideo(int videoId)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -227,6 +241,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpGet("metadata/{videoId}")]
+        [EnforceTenant(
+            new [] {"videoId"},
+            new [] {typeof(Video)}
+        )]
         public async Task<IActionResult> GetVideoMetadata(int videoId)
         {
             try
@@ -277,8 +295,8 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpGet("{orgId}")]
-        public async Task<IActionResult> GetAllVideos(int orgId)
+        [HttpGet]
+        public async Task<IActionResult> GetAllVideos()
         {
             try
             {
@@ -290,6 +308,8 @@ namespace VidizmoBackend.Controllers
                     ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
                     : null;
 
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
+                
                 var videoList = await _videoService.GetAllVideos(orgId);
 
                 if (videoList == null || videoList.Count() == 0) return StatusCode(404, new { error = "No videos found in this tenant" });
@@ -302,6 +322,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpPut("metadata/{videoId}")]
+        [EnforceTenant(
+            new[] {"videoId"},
+            new[] {typeof(Video)}
+        )]
         public async Task<IActionResult> EditVideoMetadata(int videoId, MetadataReqDto metadataReqDto)
         {
             try
@@ -314,7 +338,7 @@ namespace VidizmoBackend.Controllers
                     ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
                     : null;
 
-                 var permissionDto = new PermissionDto
+                var permissionDto = new PermissionDto
                 {
                     Action = "edit",
                     Entity = "metadata"
@@ -327,7 +351,7 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to edit metadata." });
 
                 var updated = await _videoService.EditVideoMetadataAsync(metadataReqDto, videoId);
-                
+
                 var payload = AuditLogHelper.BuildPayload(new { videoId }, metadataReqDto);
                 var log = new AuditLog
                 {
@@ -340,7 +364,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok(new {message = "Video metadata updated successfully."});
+                return Ok(new { message = "Video metadata updated successfully." });
             }
             catch (InvalidOperationException ex)
             {

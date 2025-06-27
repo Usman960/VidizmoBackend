@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using VidizmoBackend.Helpers;
 using VidizmoBackend.Models;
+using VidizmoBackend.Filters;
 
 namespace VidizmoBackend.Controllers
 {
@@ -24,13 +25,13 @@ namespace VidizmoBackend.Controllers
             _auditLogService = auditLogService;
         }
 
-        [HttpPost("{orgId}")]
-        public async Task<IActionResult> CreateGroup(int orgId, CreateGroupDto dto)
+        [HttpPost]
+        public async Task<IActionResult> CreateGroup(CreateGroupDto dto)
         {
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 // Check if the user has permission to create groups
                 var permissionDto = new PermissionDto
                 {
@@ -68,6 +69,10 @@ namespace VidizmoBackend.Controllers
         }
 
         [HttpDelete("{groupId}")]
+        [EnforceTenant(
+            new [] {"groupId"},
+            new [] {typeof(Group)}
+        )]
         public async Task<IActionResult> DeleteGroup(int groupId)
         {
             try
@@ -104,7 +109,7 @@ namespace VidizmoBackend.Controllers
                 };
                 _ = _auditLogService.SendLogAsync(log);
 
-                return Ok(new {message = "Group deleted successfully."});
+                return Ok(new { message = "Group deleted successfully." });
             }
             catch (Exception ex)
             {
@@ -112,13 +117,13 @@ namespace VidizmoBackend.Controllers
             }
         }
 
-        [HttpGet("{orgId}")]
-        public async Task<IActionResult> GetDetailedGroupList(int orgId)
+        [HttpGet]
+        public async Task<IActionResult> GetDetailedGroupList()
         {
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
+                int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
                 var permissionDto = new PermissionDto
                 {
                     Action = "view",

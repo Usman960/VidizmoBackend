@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using VidizmoBackend.DTOs;
 using VidizmoBackend.Models;
 using VidizmoBackend.Repositories;
@@ -16,7 +17,7 @@ namespace VidizmoBackend.Services
             _userRepo = userRepo;
         }
 
-        public async Task<bool> CreateOrganizationAsync(int userId, CreateOrgReqDto dto)
+        public async Task<User> CreateOrganizationAsync(int userId, CreateOrgReqDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Description))
             {
@@ -72,7 +73,7 @@ namespace VidizmoBackend.Services
             {
                 throw new InvalidOperationException("Failed to assign role to user.");
             }
-            return true;
+            return await _userRepo.GetUserByIdAsync(userId);
         }
 
         public async Task<string?> GetOrgNameById(int orgId)
