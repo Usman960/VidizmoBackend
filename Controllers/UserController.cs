@@ -45,18 +45,6 @@ namespace VidizmoBackend.Controllers
                 if (!result)
                     return StatusCode(500, "Failed to add user to organization.");
 
-                var payload = AuditLogHelper.BuildPayload(new { orgId }, dto.Email);
-
-                var log = new AuditLog
-                {
-                    Action = "add_org",
-                    Entity = "user",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = currentUserId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return Ok(new { message = "User added to organization successfully." });
             }
             catch (ArgumentException ex)
@@ -92,18 +80,6 @@ namespace VidizmoBackend.Controllers
                 var result = await _userService.AddUserToGroupAsync(groupId, userId, currentUserId);
                 if (!result)
                     return StatusCode(500, "Failed to add user to group.");
-
-                var payload = AuditLogHelper.BuildPayload(routeData: new { groupId, userId });
-
-                var log = new AuditLog
-                {
-                    Action = "add_gp",
-                    Entity = "user",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = currentUserId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new { message = "User added to group successfully." });
             }
@@ -141,18 +117,6 @@ namespace VidizmoBackend.Controllers
                 if (!result)
                     return StatusCode(500, "Failed to remove user from group.");
 
-                var payload = AuditLogHelper.BuildPayload(routeData: new { groupId, userId });
-
-                var log = new AuditLog
-                {
-                    Action = "delete_gp",
-                    Entity = "user",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = currentUserId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return Ok(new { message = "User removed from group successfully." });
             }
             catch (ArgumentException ex)
@@ -183,18 +147,6 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view users." });
 
                 var users = await _userService.GetUsersInOrganization(orgId);
-
-                var payload = AuditLogHelper.BuildPayload(new { orgId });
-
-                var log = new AuditLog
-                {
-                    Action = "view",
-                    Entity = "user",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = currentUserId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(users);
             }

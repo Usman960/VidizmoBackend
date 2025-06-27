@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.Http.Features;
+using VidizmoBackend.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,9 +84,10 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 var app = builder.Build();
 app.UseCors();
 app.UseHttpsRedirection();
-app.UseMiddleware<TokenMiddleware>(); // 👈 Your scoped token middleware
+app.UseMiddleware<TokenMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<AuditLoggingMiddleware>();
 app.MapControllers();
 
 app.Run();

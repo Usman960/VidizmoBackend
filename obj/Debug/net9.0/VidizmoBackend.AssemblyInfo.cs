@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VidizmoBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9026b20af11a26f988dd6882af655cedac93c146")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1c3f8b74da8a51edbef94dcc4267ef584fcb0ddd")]
 [assembly: System.Reflection.AssemblyProductAttribute("VidizmoBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VidizmoBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

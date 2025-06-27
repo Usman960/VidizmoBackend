@@ -46,17 +46,6 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while creating the role.");
                 }
-                var payload = AuditLogHelper.BuildPayload(bodyData: dto);
-
-                var log = new AuditLog
-                {
-                    Action = "create",
-                    Entity = "role",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new { message = "Role created successfully." });
             }
@@ -93,16 +82,6 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while assigning the role.");
                 }
-                var payload = AuditLogHelper.BuildPayload(routeData: new { userId, orgId, roleId });
-                var log = new AuditLog
-                {
-                    Action = "assign_role",
-                    Entity = "user",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log); ;
 
                 return Ok(new { message = "Role assigned successfully." });
             }
@@ -139,16 +118,6 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while assigning the role to the group.");
                 }
-                var payload = AuditLogHelper.BuildPayload(routeData: new { groupId, orgId, roleId });
-                var log = new AuditLog
-                {
-                    Action = "assign_role",
-                    Entity = "group",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = assignedByUserId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new { message = "Role assigned to group successfully." });
             }
@@ -185,18 +154,6 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(500, "An error occurred while editing the role.");
                 }
 
-                var payload = AuditLogHelper.BuildPayload(new { roleId }, dto);
-
-                var log = new AuditLog
-                {
-                    Action = "edit",
-                    Entity = "role",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return Ok(new { message = "Role edited successfully." });
             }
             catch (Exception ex)
@@ -232,17 +189,6 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(500, "An error occurred while deleting the role.");
                 }
 
-                var payload = AuditLogHelper.BuildPayload(routeData: new { roleId });
-                var log = new AuditLog
-                {
-                    Action = "delete",
-                    Entity = "role",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return Ok(new { message = "Role deleted successfully." });
             }
             catch (Exception ex)
@@ -277,16 +223,6 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while revoking the role.");
                 }
-                var payload = AuditLogHelper.BuildPayload(routeData: new { userOgGpRoleId });
-                var log = new AuditLog
-                {
-                    Action = "revoke",
-                    Entity = "role",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new { message = "Role revoked successfully." });
             }
@@ -316,17 +252,6 @@ namespace VidizmoBackend.Controllers
                 }
                 var roles = await _roleService.GetAllRoles(orgId);
 
-                var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
-                var log = new AuditLog
-                {
-                    Action = "view",
-                    Entity = "role",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return Ok(roles);
             }
             catch (Exception ex)
@@ -355,17 +280,6 @@ namespace VidizmoBackend.Controllers
                 }
                 var roles = await _roleService.GetIndividualRoles(orgId);
 
-                var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
-                var log = new AuditLog
-                {
-                    Action = "view",
-                    Entity = "role",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return Ok(roles);
             }
             catch (Exception ex)
@@ -393,17 +307,6 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to view roles." });
                 }
                 var roles = await _roleService.GetGroupRoles(orgId);
-
-                var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
-                var log = new AuditLog
-                {
-                    Action = "view",
-                    Entity = "role",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(roles);
             }

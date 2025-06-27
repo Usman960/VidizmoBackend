@@ -120,17 +120,6 @@ namespace VidizmoBackend.Controllers
                 if (stream == null)
                     return NotFound("Video not found.");
 
-                var payload = AuditLogHelper.BuildPayload(routeData: new { videoId });
-                var log = new AuditLog
-                {
-                    Action = "download",
-                    Entity = "video",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    TokenId = scopedTokenId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
                 return File(stream, "application/octet-stream", $"video_{videoId}.mp4");
             }
             catch (FileNotFoundException)
@@ -174,18 +163,6 @@ namespace VidizmoBackend.Controllers
 
                 var (stream, contentType, fileName) = await _videoService.StreamVideoAsync(videoId);
 
-                var payload = AuditLogHelper.BuildPayload(routeData: new { videoId });
-                var log = new AuditLog
-                {
-                    Action = "play",
-                    Entity = "video",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    TokenId = scopedTokenId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return File(stream, contentType, enableRangeProcessing: true);
             }
             catch (FileNotFoundException)
@@ -220,17 +197,6 @@ namespace VidizmoBackend.Controllers
                 var deleted = await _videoService.DeleteVideoAsync(videoId);
                 if (!deleted)
                     return NotFound(new { message = "Video not found or could not be deleted." });
-
-                var payload = AuditLogHelper.BuildPayload(routeData: new { videoId });
-                var log = new AuditLog
-                {
-                    Action = "delete",
-                    Entity = "video",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new { message = "Video deleted successfully." });
             }
@@ -271,18 +237,6 @@ namespace VidizmoBackend.Controllers
 
                 var metadata = await _videoService.GetMetadataByIdAsync(videoId);
 
-                var payload = AuditLogHelper.BuildPayload(routeData: new { videoId });
-                var log = new AuditLog
-                {
-                    Action = "view",
-                    Entity = "metadata",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    TokenId = scopedTokenId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return Ok(metadata);
             }
             catch (FileNotFoundException)
@@ -309,7 +263,7 @@ namespace VidizmoBackend.Controllers
                     : null;
 
                 int orgId = int.Parse(User.FindFirst("OrganizationId")?.Value);
-                
+
                 var videoList = await _videoService.GetAllVideos(orgId);
 
                 if (videoList == null || videoList.Count() == 0) return StatusCode(404, new { error = "No videos found in this tenant" });
@@ -351,18 +305,6 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to edit metadata." });
 
                 var updated = await _videoService.EditVideoMetadataAsync(metadataReqDto, videoId);
-
-                var payload = AuditLogHelper.BuildPayload(new { videoId }, metadataReqDto);
-                var log = new AuditLog
-                {
-                    Action = "edit",
-                    Entity = "metadata",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    TokenId = scopedTokenId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new { message = "Video metadata updated successfully." });
             }

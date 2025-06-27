@@ -32,18 +32,6 @@ namespace VidizmoBackend.Controllers {
 
                 var (token, _) = _tokenGenerator.GenerateToken(updatedUser);
 
-                var payload = AuditLogHelper.BuildPayload(bodyData: dto);
-
-                var log = new AuditLog
-                {
-                    Action = "create",
-                    Entity = "org",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
-
                 return Ok(new { message = "Organization created successfully.", Token = token });
             }
             catch (Exception ex)

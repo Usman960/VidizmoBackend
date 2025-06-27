@@ -48,17 +48,6 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while creating the group.");
                 }
-                var payload = AuditLogHelper.BuildPayload(new { orgId }, dto);
-
-                var log = new AuditLog
-                {
-                    Action = "create",
-                    Entity = "group",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new {message = "Group created successfully."});
             }
@@ -97,17 +86,6 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while deleting the group.");
                 }
-                var payload = AuditLogHelper.BuildPayload(routeData: new { groupId });
-
-                var log = new AuditLog
-                {
-                    Action = "delete",
-                    Entity = "group",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new { message = "Group deleted successfully." });
             }
@@ -136,18 +114,6 @@ namespace VidizmoBackend.Controllers
                 }
 
                 var list = await _groupService.GetGroupLists(orgId);
-               
-                var payload = AuditLogHelper.BuildPayload(routeData: new { orgId });
-
-                var log = new AuditLog
-                {
-                    Action = "view",
-                    Entity = "group",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
 
                 return Ok(new {groupLists = list});
             }

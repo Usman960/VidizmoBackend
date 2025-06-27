@@ -186,16 +186,15 @@ namespace VidizmoBackend.Data
                 .OnDelete(DeleteBehavior.Restrict);
             
             modelBuilder.Entity<AuditLog>()
-                .HasOne(a => a.PerformedBy)
-                .WithMany() // No back-reference needed
-                .HasForeignKey(a => a.PerformedById)
-                .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
-
+                .HasOne(al => al.User)
+                .WithMany() 
+                .HasForeignKey(al => al.UserId)
+                .OnDelete(DeleteBehavior.Restrict); 
             modelBuilder.Entity<AuditLog>()
-                .HasOne(a => a.Token)
-                .WithMany() // No back-reference needed
-                .HasForeignKey(a => a.TokenId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(al => al.ScopedToken)
+                .WithMany() 
+                .HasForeignKey(al => al.TokenId)
+                .OnDelete(DeleteBehavior.Restrict); 
         }
     }
 }

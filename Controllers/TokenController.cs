@@ -43,17 +43,7 @@ namespace VidizmoBackend.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to generate token." });
                 }
                 var token = await _tokenService.GenerateScopedTokenAsync(userId, orgId, dto);
-                var payload = AuditLogHelper.BuildPayload(new { orgId }, dto);
-
-                var log = new AuditLog
-                {
-                    Action = "generate",
-                    Entity = "scoped_token",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
+ 
                 var content = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(token));
                 var fileName = $"scoped-token-{DateTime.UtcNow:yyyyMMdd-HHmmss}.txt";
                 return File(content, "text/plain", fileName); ;
@@ -94,17 +84,7 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while revoking the token.");
                 }
-                var payload = AuditLogHelper.BuildPayload(routeData: new { tokenId });
-
-                var log = new AuditLog
-                {
-                    Action = "revoke",
-                    Entity = "scoped_token",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
+        
                 return Ok(new { message = "Token revoked successfully." });
             }
             catch (InvalidOperationException ex)
@@ -143,17 +123,7 @@ namespace VidizmoBackend.Controllers
                 {
                     return StatusCode(500, "An error occurred while deleting the token.");
                 }
-                var payload = AuditLogHelper.BuildPayload(routeData: new { tokenId });
 
-                var log = new AuditLog
-                {
-                    Action = "delete",
-                    Entity = "scoped_token",
-                    Timestamp = DateTime.UtcNow,
-                    PerformedById = userId,
-                    Payload = payload
-                };
-                _ = _auditLogService.SendLogAsync(log);
                 return Ok(new { message = "Token deleted successfully." });
             }
             catch (InvalidOperationException ex)
