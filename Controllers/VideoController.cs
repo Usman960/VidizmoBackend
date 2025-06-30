@@ -266,7 +266,7 @@ namespace VidizmoBackend.Controllers
 
                 var videoList = await _videoService.GetAllVideos(orgId);
 
-                if (videoList == null || videoList.Count() == 0) return StatusCode(404, new { error = "No videos found in this tenant" });
+                if (videoList == null || videoList.Count() == 0) return StatusCode(404, new { message = "No videos found in this tenant" });
                 return Ok(new { VideoList = videoList });
             }
             catch (Exception ex)

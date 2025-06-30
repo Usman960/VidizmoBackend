@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using VidizmoBackend.Services;
 
 namespace VidizmoBackend.Middlewares
@@ -13,13 +14,13 @@ namespace VidizmoBackend.Middlewares
 
         public async Task InvokeAsync(HttpContext context, AuditLogService auditLogService)
         {
-            int? userId = null;
             int? tokenId = null;
 
-            var userIdClaim = context.User?.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+            int? userId = null;
+            var userIdClaim = context.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out int uid)) userId = uid;
 
-            var tokenIdClaim = context.User?.Claims.FirstOrDefault(c => c.Type == "scopedtokenid")?.Value;
+            var tokenIdClaim = context.User?.Claims.FirstOrDefault(c => c.Type == "ScopedTokenId")?.Value;
             if (int.TryParse(tokenIdClaim, out int tid)) tokenId = tid;
 
             // Request Body
@@ -39,8 +40,23 @@ namespace VidizmoBackend.Middlewares
             await _next(context);
 
             context.Response.Body.Seek(0, SeekOrigin.Begin);
-            var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
-            context.Response.Body.Seek(0, SeekOrigin.Begin);
+
+            bool isDownload = context.Request.Path.StartsWithSegments("/api/video/download", StringComparison.OrdinalIgnoreCase);
+            bool isBinary = context.Response.ContentType?.Contains("application/octet-stream", StringComparison.OrdinalIgnoreCase) == true;
+            bool isSuccess = context.Response.StatusCode == StatusCodes.Status200OK;
+
+            string responseBody;
+
+            if (isDownload && isBinary && isSuccess)
+            {
+                responseBody = $"[Binary response skipped for play/download. Content-Type: {context.Response.ContentType}]";
+            }
+            else
+            {
+                using var reader = new StreamReader(context.Response.Body, leaveOpen: true);
+                responseBody = await reader.ReadToEndAsync();
+                context.Response.Body.Seek(0, SeekOrigin.Begin);
+            }
 
             var auditLog = new AuditLog
             {
